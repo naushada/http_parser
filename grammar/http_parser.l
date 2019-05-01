@@ -78,6 +78,11 @@ METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
   return CRLF;								
 }
 
+<INITIAL>{CRLF}$ {
+		printf("Matched with CRLF \n");						
+  /*! End of line */
+  return CRLF;								
+}
 
 <INITIAL>. {
 	printf("Got the string %s\n", yytext);							
