@@ -89,9 +89,11 @@ METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
 	yyerror(yyscanner, "\n(Naushad)Syntax Error!!");
 }
 
+
 <INITIAL><<EOF>> {
   printf("Parsed successfully\n");
-		yyterminate();
+		return EOF;
 }
+
 
 %%
