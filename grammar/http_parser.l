@@ -20,9 +20,8 @@ int yywrap(yyscan_t yyscanner)
 %option header-file="parser/http_parser.yy.h"
 %option outfile="parser/http_parser.yy.c"
 
-/*%x STRING*/
+%x STRING
 
-/*SPACE       [ \t\r\n]*/
 DIGIT       [0-9]
 INTEGER     -?(0|[1-9]{DIGIT}*)
 NUMBER      {INTEGER}\.{DIGIT}+
@@ -32,17 +31,21 @@ CRLF        [\r\n]
 SPACE       [ ]
 PROTOCOL    (HTTP)\/{DIGIT}\.{DIGIT} 
 METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
+/*STR         @"^[a-zA-Z-0-9~+:;,/#&_@*%$!()\[\] ]*$"							*/	
+STR         (\"|\')([ALPHA]*[^\r\n])(\"|\')								
+
 %%
 
-<INITIAL>{ALPHA}({SPACE}{ALPHA})* {
-  printf("Reason Phrase is %s\n", yytext);
-		return REASON_PHRASE;
-}
 
-<INITIAL>{METHOD} {
+<INITIAL>{METHOD}+ {
 		printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
 		yylval->str = (unsigned char *)yytext;
   return HTTP_METHOD;
+}
+
+<INITIAL>{ALPHA}+ {
+  printf("Reason Phrase is %s\n", yytext);
+		return REASON_PHRASE;
 }
 
 <INITIAL>{SPACE}* {
@@ -61,7 +64,7 @@ METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
 }
 
 <INITIAL>{PROTOCOL} {
-  printf("Got the Method %s\n", yytext);
+  printf("Got the Protocol %s\n", yytext);
 		yylval->str = (unsigned char *)yytext;
 		return HTTP_VERSION;
 }
@@ -94,6 +97,7 @@ METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
   printf("Parsed successfully\n");
 		return EOF;
 }
+
 
 
 %%
