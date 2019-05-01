@@ -73,13 +73,13 @@ METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
 }
 
 <INITIAL>{CRLF} {
-		printf("Matched with CRLF \n");						
+		printf("Empty Line with CRLF \n");						
   /*! End of line */
   return CRLF;								
 }
 
 <INITIAL>{CRLF}$ {
-		printf("Matched with CRLF \n");						
+		printf("End with CRLF \n");						
   /*! End of line */
   return CRLF;								
 }

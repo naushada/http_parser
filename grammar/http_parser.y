@@ -36,6 +36,7 @@ typedef void *yyscan_t;
 %type <str> message_body 
 
 %define parse.error verbose
+%define parse.lac full
 /*! For re-entrant parser*/
 %define api.pure full
 %param {yyscan_t yyscanner}
@@ -51,21 +52,27 @@ generic_message
   : http_message
   ;
 
+/*! start_line grammar definition*/
+message_header
+  : /**/
+  | CRLF                         {printf("message Header\n");}
+  | STRING ':' SPACE STRING CRLF message_header 
+  ;
+
 http_message
-  : message_header
+  : request_line message_header  {printf("request line %s\n", $1);}
+  | response_line message_header {printf("Response line is %s\n", $1);}
+  | request_line   {printf("request line %s\n", $1);}
+  | response_line  {printf("Response line is %s\n", $1);}
+  | CRLF                         {printf("message Header\n");}
+  | message_body
   ;
 
 message_body
   : /*Empty*/
+  | STRING CRLF
   ; 
 
-/*! start_line grammar definition*/
-message_header
-  : request_line message_header  {printf("request line %s\n", $1);}
-  | response_line message_header {printf("Response line is %s\n", $1);}
-  | CRLF                         {printf("message Header\n");}
-  | mesage_header message_body
-  ;
 
 request_line
   : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {printf("\n$1 %s\n$5 %s \n", $1, $5);}
