@@ -38,19 +38,19 @@ STR         (\"|\')([ALPHA]*[^\r\n])(\"|\')
 
 
 <INITIAL>{METHOD}+ {
-		printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
-		yylval->str = (unsigned char *)yytext;
+	printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
+	yylval->str = (unsigned char *)yytext;
   return HTTP_METHOD;
 }
 
 <INITIAL>{ALPHA}+ {
-  printf("Reason Phrase is %s\n", yytext);
-		return REASON_PHRASE;
+  printf("String is %s\n", yytext);
+	return STRING;
 }
 
-<INITIAL>{SPACE}* {
+<INITIAL>{SPACE}+ {
   printf("matched with WS\n");
-		return SPACE;
+	return SPACE;
 }
 
 <INITIAL>"*" {
@@ -63,26 +63,25 @@ STR         (\"|\')([ALPHA]*[^\r\n])(\"|\')
   return('/');		
 }
 
+<INITIAL>":" {
+  printf("Got the : (%s)\n", yytext);
+  return(':');		
+}
+
 <INITIAL>{PROTOCOL} {
   printf("Got the Protocol %s\n", yytext);
-		yylval->str = (unsigned char *)yytext;
-		return HTTP_VERSION;
+	yylval->str = (unsigned char *)yytext;
+	return HTTP_VERSION;
 }
 
 
 <INITIAL>{DIGIT}{3} {
   printf("Status Code is %d\n", atoi(yytext));
-		return STATUS_CODE;
-}
-
-<INITIAL>{CRLF} {
-		printf("Empty Line with CRLF \n");						
-  /*! End of line */
-  return CRLF;								
+	return STATUS_CODE;
 }
 
 <INITIAL>{CRLF}$ {
-		printf("End with CRLF \n");						
+	printf("End with CRLF \n");						
   /*! End of line */
   return CRLF;								
 }
@@ -95,7 +94,7 @@ STR         (\"|\')([ALPHA]*[^\r\n])(\"|\')
 
 <INITIAL><<EOF>> {
   printf("Parsed successfully\n");
-		return EOF;
+	return EOF;
 }
 
 

@@ -6,7 +6,7 @@
 int __http_process_request(unsigned char *HTTP_method, unsigned char *HTTP_version)
 {
   fprintf(stderr, "[%s:%d Value of method %s Version %s\n", 
-																		__func__, __LINE__,HTTP_method, HTTP_version);
+                  __func__, __LINE__,HTTP_method, HTTP_version);
   return(0);		
 }
 
@@ -21,13 +21,13 @@ http_message_t *http_init(void)
 {
   http_message_t *pHttpMsg = (http_message_t *)malloc(sizeof(http_message_t));
   if(pHttpMsg)
-		{
+  {
     memset((void *)pHttpMsg, 0, sizeof(http_message_t));
     fprintf(stderr, "Memory is allocated successfully\n");				
     return(pHttpMsg);				
-		}
+  }
 
-		return(NULL);
+  return(NULL);
 
 }/*http_init*/
 
@@ -45,7 +45,7 @@ unsigned char *__http_parser_ex(char *pIn)
   if(yylex_init(&yyscanner))
   {
     fprintf(stderr, "%s:%d initialization to scanner failed\n", __FILE__, __LINE__);
-				return((unsigned char *)0);
+    return((unsigned char *)0);
   }
 
   YY_BUFFER_STATE buff = pIn ? yy_scan_string(pIn, yyscanner) : 0;
@@ -67,7 +67,7 @@ unsigned char *__http_parser_ex(char *pIn)
 int __http_process_options(void)
 {
   fprintf(stderr,"Processing options");
-		return 0;
+	return 0;
 }
 
 

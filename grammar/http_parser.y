@@ -54,20 +54,20 @@ generic_message
 
 /*! start_line grammar definition*/
 message_header
-  : /**/
-  | CRLF                         {printf("message Header\n");}
-  | STRING ':' SPACE STRING CRLF message_header 
+  : %empty
+  | STRING ':' SPACE STRING CRLF
+  | CRLF                         {printf("message Body Starts\n");}
   ;
 
 http_message
   : request_line message_header  {printf("request line %s\n", $1);}
   | response_line message_header {printf("Response line is %s\n", $1);}
+  | message_header message_body
   | CRLF                         {printf("http message Header CRLF\n");}
-  | message_body
   ;
 
 message_body
-  : /*Empty*/
+  : %empty
   | STRING CRLF
   ; 
 
@@ -77,7 +77,7 @@ request_line
   ;
 
 response_line
-  : HTTP_VERSION SPACE STATUS_CODE SPACE REASON_PHRASE CRLF
+  : HTTP_VERSION SPACE STATUS_CODE SPACE STRING CRLF
   ;
 
 request_URI
