@@ -19,10 +19,10 @@ build:
 	@mkdir -p bin
 
 parser/http_parser.yy.c: grammar/http_parser.l
-	$(LEX) $^
+	$(LEX) --debug $^
 
 parser/http_parser.tab.c: grammar/http_parser.y
-	$(YACC) -d -b http_parser $^ -o $@
+	$(YACC) --debug --verbose -d -b http_parser $^ -o $@
 
 # /*Creating Shared library i.e. libjson.so */
 $(BIN): $(OBJS)

@@ -18,22 +18,27 @@ typedef void *yyscan_t;
   http_message_t *message;
   http_qs_t      *request_line;
   http_header_t  *header_line;
-  unsigned char *str;
+  unsigned char  *str;
+  unsigned int   offset;
 }
 
 /*! tokens are looked in lex file for pattern matching*/
 %token <str> STRING HTTP_METHOD HTTP_VERSION QS RESOURCE CRLF SPACE
-%token <str> REASON_PHRASE
+%token <str> REASON_PHRASE COLON
+%token <str> PARAM VALUE
 %token <int> STATUS_CODE
 
 %type <request_line> request_URI 
-%type <header_line> message_header 
+%type <header_line> mime_header 
+%type <header_line> mime_headers 
 %type <message> generic_message
 %type <message> http_message
+%type <message> http_messages
 %type <str> URI
 %type <str> request_line 
 %type <str> response_line 
 %type <str> message_body 
+%type <str> delimeter 
 
 %define parse.error verbose
 %define parse.lac full
@@ -42,36 +47,58 @@ typedef void *yyscan_t;
 %param {yyscan_t yyscanner}
 
 /*! Starting point of the Grammar*/
-%start generic_message
+/*%start generic_message*/
+
+%start http_message
 
 
 %%
 
 /*! defining Grammar Rule*/
 generic_message
-  : http_message
+  : http_messages
   ;
 
 /*! start_line grammar definition*/
-message_header
-  : %empty
-  | STRING ':' SPACE STRING CRLF
-  | CRLF                         {printf("message Body Starts\n");}
+
+http_messages
+  : http_messages http_message     {printf("request line %s\n", $1);}
+  | %empty
   ;
 
+ /* | http_message message_header   {printf("Response line is %s\n", $1);}
+  | CRLF                          {printf("http message Header CRLF\n");}
+  | CRLF message_body
+  */
+
 http_message
-  : request_line message_header  {printf("request line %s\n", $1);}
-  | response_line message_header {printf("Response line is %s\n", $1);}
-  | message_header message_body
-  | CRLF                         {printf("http message Header CRLF\n");}
+  : request_line mime_headers    {printf("Value of Mime Heade is %s", $2);}
+  | request_line 
+  | response_line mime_headers
+  | response_line
+  | mime_headers message_body
+  | mime_headers
   ;
 
 message_body
   : %empty
-  | STRING CRLF
+  | STRING
   ; 
 
+mime_headers
+  : %empty
+  | mime_headers mime_header
+  ;
 
+mime_header
+  : PARAM SPACE VALUE  {printf("Mime Header %s %s", $1, $3);}
+  | %empty
+  | CRLF
+  ;
+
+delimeter
+  : ':'          {printf("delimeter is \":\"");}
+  ;
 request_line
   : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {printf("\n$1 %s\n$5 %s \n", $1, $5);}
   ;
