@@ -47,29 +47,9 @@ typedef void *yyscan_t;
 %param {yyscan_t yyscanner}
 
 /*! Starting point of the Grammar*/
-/*%start generic_message*/
-
 %start http_message
 
-
 %%
-
-/*! defining Grammar Rule*/
-generic_message
-  : http_messages
-  ;
-
-/*! start_line grammar definition*/
-
-http_messages
-  : http_messages http_message     {printf("request line %s\n", $1);}
-  | %empty
-  ;
-
- /* | http_message message_header   {printf("Response line is %s\n", $1);}
-  | CRLF                          {printf("http message Header CRLF\n");}
-  | CRLF message_body
-  */
 
 http_message
   : request_line mime_headers    {printf("Value of Mime Heade is %s", $2);}

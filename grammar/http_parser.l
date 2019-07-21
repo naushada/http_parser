@@ -33,10 +33,8 @@ CRLF        [\r\n]
 SPACE       [ ]
 PROTOCOL    (HTTP)\/{DIGIT}\.{DIGIT} 
 METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
-/*STR         @"^[a-zA-Z-0-9~+:;,/#&_@*%$!()\[\] ]*$" */	
 STR         (\"|\')([ALPHA]([ALPHANUM][\.\/\+\-\%\*])*:?[^\r\n])(\"|\')	
 MIME_PARAM_NAME      [ALPHA]([ALPHANUM][\-])*	
-NOTSPACE    [^SPACE]
 BODY_START  {CRLF}{2}
 
 
@@ -44,16 +42,14 @@ BODY_START  {CRLF}{2}
 
 
 <INITIAL>{METHOD}+ {
-	printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
-	yylval->str = (unsigned char *)yytext;
+  printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
+  yylval->str = (unsigned char *)yytext;
   return HTTP_METHOD;
 }
 
-
-
 <INITIAL>{SPACE}+ {
   printf("matched with WS\n");
-	return SPACE;
+  return SPACE;
 }
 
 <INITIAL>"*" {
@@ -68,25 +64,25 @@ BODY_START  {CRLF}{2}
 
 <INITIAL>{PROTOCOL} {
   printf("Got the Protocol %s\n", yytext);
-	yylval->str = (unsigned char *)yytext;
-	return HTTP_VERSION;
+  yylval->str = (unsigned char *)yytext;
+  return HTTP_VERSION;
 }
 
 
 <INITIAL>{DIGIT}{3} {
   printf("Status Code is %d\n", atoi(yytext));
-	return STATUS_CODE;
+  return STATUS_CODE;
 }
 
 <INITIAL>{CRLF}$ {
-	printf("End with CRLF \n");						
+  printf("End with CRLF \n");						
   /*! End of line */
   return CRLF;								
 }
 
 <INITIAL><<EOF>> {
   printf("Parsed successfully\n");
-	return EOF;
+  return EOF;
 }
 
 <INITIAL>{MIME_PARAM_NAME}+ {
@@ -116,7 +112,7 @@ BODY_START  {CRLF}{2}
 
 <MIME_PARAM_VALUE_SCAN>{SPACE}+ {
   printf("MIME VALUE with WS\n");
-	return(SPACE);
+  return(SPACE);
 }
 
 
