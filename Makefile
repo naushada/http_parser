@@ -1,11 +1,11 @@
 CC = gcc
 YACC = bison
 LEX = flex
-BIN = bin/HTTP
+BIN = bin/shahada
 FLAGS =  -O2 -Wall
 INC = -I./ -I./inc -I./parser
 LINK_LIB = 
-OBJS        = obj/main.o obj/__http.o obj/http_parser.tab.o obj/http_parser.yy.o
+OBJS        = obj/main.o obj/shahada.o obj/http_parser.tab.o obj/http_parser.yy.o
 GENERAT_SRC = parser/http_parser.tab.c parser/http_parser.tab.h parser/http_parser.yy.c parser/http_parser.yy.h
 
 
@@ -38,8 +38,8 @@ obj/%.o: src/%.c
 obj/%.o: parser/%.c
 	$(CC) $(FLAGS) -c $< -o $@ $(INC)
 
-obj/main.o        : inc/__http.h
-obj/__http.o        : inc/__http.h parser/http_parser.tab.h parser/http_parser.yy.h
+obj/main.o        : inc/shahada.h
+obj/shahada.o        : inc/shahada.h parser/http_parser.tab.h parser/http_parser.yy.h
 obj/http_parser.tab.o  : parser/http_parser.tab.c parser/http_parser.tab.h
 obj/http_parser.yy.o      : parser/http_parser.yy.c parser/http_parser.yy.h
 

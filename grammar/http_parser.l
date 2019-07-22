@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "http_parser.tab.h"								
-#include "__http.h"
+#include "shahada.h"
 
 extern int yyerror(yyscan_t yyscanner, const char *s);
 
@@ -23,19 +23,21 @@ int yywrap(yyscan_t yyscanner)
 /*Exclusive State for String Matching*/
 %x STRING MIME_PARAM_SCAN MIME_PARAM_VALUE_SCAN HTTP_BODY_SCAN MESSAGE_BODY_SCAN_START
 
-DIGIT       [0-9]
-INTEGER     -?(0|[1-9]{DIGIT}*)
-NUMBER      {INTEGER}\.{DIGIT}+
-ALPHA       [a-zA-Z]
-ALPHANUM    [a-zA-Z0-9]
-HEX         [0-9a-fA-F]
-CRLF        [\r\n]
-SPACE       [ ]
-PROTOCOL    (HTTP)\/{DIGIT}\.{DIGIT} 
-METHOD      (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
-STR         (\"|\')([ALPHA]([ALPHANUM][\.\/\+\-\%\*])*:?[^\r\n])(\"|\')	
+DIGIT                [0-9]
+INTEGER              -?(0|[1-9]{DIGIT}*)
+NUMBER               {INTEGER}\.{DIGIT}+
+ALPHA                [a-zA-Z]
+ALPHANUM             [a-zA-Z0-9]
+HEX                  [0-9a-fA-F]
+CRLF                 [\r\n]
+SPACE                [ ]
+PROTOCOL             (HTTP)\/{DIGIT}\.{DIGIT} 
+METHOD               (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
+STR                  (\"|\')([ALPHA]([ALPHANUM][\.\/\+\-\%\*])*:?[^\r\n])(\"|\')	
 MIME_PARAM_NAME      [ALPHA]([ALPHANUM][\-])*	
-BODY_START  {CRLF}{2}
+BODY_START           {CRLF}{2}
+CHAR_EXCEPT_NEWLINE  .
+NEWLINE              "\n"
 
 
 %%
@@ -85,20 +87,14 @@ BODY_START  {CRLF}{2}
   return EOF;
 }
 
+ /*Parsing MIME Header Field*/
 <INITIAL>{MIME_PARAM_NAME}+ {
   printf("MIME_FIELD is %s\n",yytext);
   BEGIN MIME_PARAM_SCAN;
 }
 
-<INITIAL>{ALPHA} {
-  printf("\n(Naushad)String is %s\n", yytext);
-  yylval->offset = 0;
-  //yylval->str[yylval->offset++] = yytext[0];
-  printf("Changing the state");
-  BEGIN STRING;
-}
-
-<MIME_PARAM_SCAN>. {
+ /*! scanning mime-field name which ends with :*/
+<MIME_PARAM_SCAN>{CHAR_EXCEPT_NEWLINE} {
   if(':' == *yytext)
   {
     BEGIN MIME_PARAM_VALUE_SCAN;
@@ -110,55 +106,56 @@ BODY_START  {CRLF}{2}
   printf("(Naushad)The value is %s\n", yytext);
 }
 
+ /*!mime-param-value scan- which starts with preceeding SPACE*/
 <MIME_PARAM_VALUE_SCAN>{SPACE}+ {
-  printf("MIME VALUE with WS\n");
   return(SPACE);
 }
 
-
-<MIME_PARAM_VALUE_SCAN>. {
+ /*! scanning mime-value which ends with \r\n*/
+<MIME_PARAM_VALUE_SCAN>{CHAR_EXCEPT_NEWLINE} {
   if('\r' == *yytext)
   {
-    //BEGIN MIME_PARAM_SCAN;
-    //return(VALUE);
+    /*!mime value scanning completes*/    
   }
+  /*!Collecting individual character*/
   printf("\nMime Valus is %s\n", yytext);
 }
 
-<MIME_PARAM_VALUE_SCAN>"\n" {
+ /*!Check for new mime-header.*/
+<MIME_PARAM_VALUE_SCAN>{NEWLINE} {
   BEGIN MIME_PARAM_SCAN;
   return(VALUE);
 }
 
+ /*!end-delimiter for mime-header i.e. \r\n\r\n*/
 <MIME_PARAM_SCAN>{BODY_START} {
-  printf("\nBody Starts\n");
   BEGIN MESSAGE_BODY_SCAN_START;
   return(CRLF);
 }
 
+ /*! move to initial stae upon receipt of EOF - End-of-File*/
 <MESSAGE_BODY_SCAN_START><<EOF>> {
-  printf("End of File\n");  
   BEGIN INITIAL;  
   return(EOF);
 }
 
+ /*! HTTP Body ends with single CRLF*/
 <MESSAGE_BODY_SCAN_START>{CRLF} {
-  printf("End of File\n");
+  /*!move to INITIAL state.*/    
+  BEGIN INITIAL;  
   return(CRLF);
 }
 
-<MESSAGE_BODY_SCAN_START>. {
+<MESSAGE_BODY_SCAN_START>{CHAR_EXCEPT_NEWLINE} {
   if('\r' == *yytext)
   {
-    BEGIN INITIAL;
     printf("\n 11. Inside Body ");
     return(STRING);
   }
   printf("\n Inside Body ");
 }
 
-<MESSAGE_BODY_SCAN_START>"\n" {
-  printf("End of File\n");
+<MESSAGE_BODY_SCAN_START>{NEWLINE} {
   BEGIN INITIAL;
   return(STRING);
 }

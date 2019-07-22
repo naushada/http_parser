@@ -10,7 +10,7 @@ int yyerror(yyscan_t yyscanner, const char *s);
 
 /*! Copies this piece of code verbatim in header file*/
 %code requires {
-#include "__http.h"
+#include "shahada.h"
 typedef void *yyscan_t;
 }
 
@@ -24,7 +24,6 @@ typedef void *yyscan_t;
 
 /*! tokens are looked in lex file for pattern matching*/
 %token <str> STRING HTTP_METHOD HTTP_VERSION QS RESOURCE CRLF SPACE
-%token <str> REASON_PHRASE COLON
 %token <str> PARAM VALUE
 %token <int> STATUS_CODE
 
@@ -76,9 +75,6 @@ mime_header
   | CRLF
   ;
 
-delimeter
-  : ':'          {printf("delimeter is \":\"");}
-  ;
 request_line
   : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {printf("\n$1 %s\n$5 %s \n", $1, $5);}
   ;

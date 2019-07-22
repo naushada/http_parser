@@ -7,7 +7,7 @@
 
 typedef enum
 {
-  OPTIONS,
+  OPTIONS = 1,
   GET,
   HEAD,
   POST,
@@ -19,9 +19,9 @@ typedef enum
 
 typedef enum
 {
-  HTTP1dot0,
+  HTTP1dot0 = 1,
   HTTP1dot1,
-		HTTP2dot0
+  HTTP2dot0
 }http_version_t;
 
 typedef enum
@@ -33,21 +33,22 @@ typedef enum
 typedef struct
 {
   unsigned int status_code;
-		unsigned char *status_str;
+  unsigned char *status_str;
+
 }http_status_t;
 
 struct http_header
 {
   unsigned char *key;
   unsigned char *value;
-  struct http_header *next;		
+  struct http_header *next;
 };
 
 struct qs_param
 {
   unsigned char *name;
   unsigned char *value;
-  struct qs_param *next;		
+  struct qs_param *next;
 };
 
 typedef struct qs_param qs_param_t;
@@ -56,7 +57,8 @@ struct http_qs
 {
   http_method_t method;								
   unsigned char *resource_name;
-  qs_param_t qs_param;		
+  qs_param_t qs_param;
+  
 };
 
 struct http_body
@@ -74,7 +76,8 @@ struct http_req
 {
   http_qs_t     http_req;
   http_header_t http_headr;
-  http_body_t   http_body;  		
+  http_body_t   http_body;
+
 };
 
 typedef struct http_req http_message_t;
