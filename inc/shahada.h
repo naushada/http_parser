@@ -5,16 +5,19 @@
 	* @dated 20-Apr-2019
 	* */
 
+#define __HTTP_MAX_URI_SIZE 512
+
 typedef enum
 {
-  OPTIONS = 1,
+  OPTIONS,
   GET,
   HEAD,
   POST,
   PUT,
   DELETE,
   TRACE,
-  CONNECT		
+  CONNECT,
+
 }http_method_t;
 
 typedef enum
@@ -24,12 +27,6 @@ typedef enum
   HTTP2dot0
 }http_version_t;
 
-typedef enum
-{
-  HTTP_SP = 1,
-  HTTP_CRLF		
-}http_delimeters_t;
-
 typedef struct
 {
   unsigned int status_code;
@@ -37,9 +34,23 @@ typedef struct
 
 }http_status_t;
 
+struct __http_method_t 
+{
+  http_method_t httpMethod;
+  char *pHttpMethodStr;
+  unsigned char strLen;
+};
+
+struct __http_version_t
+{
+  http_version_t httpVersion;
+  char *pVersionStr;
+  unsigned char strLen;
+};
+
 struct http_header
 {
-  unsigned char *key;
+  unsigned char *field;
   unsigned char *value;
   struct http_header *next;
 };
@@ -55,8 +66,9 @@ typedef struct qs_param qs_param_t;
 
 struct http_qs
 {
-  http_method_t method;								
-  unsigned char *resource_name;
+  http_method_t method;
+  http_version_t version;
+  unsigned char resource_name[__HTTP_MAX_URI_SIZE];
   qs_param_t qs_param;
   
 };
@@ -75,7 +87,7 @@ typedef struct http_body http_body_t;
 struct http_req
 {
   http_qs_t     http_req;
-  http_header_t http_headr;
+  http_header_t http_header;
   http_body_t   http_body;
 
 };
@@ -93,4 +105,7 @@ unsigned char *__http_parser_ex(char *pIn);
 
 http_message_t *http_init(void);
 
+void __httpRequestLine(unsigned char *pHttpMethod, unsigned char *pUri, unsigned char *pHttpVersion);
+
+void __httpMimeHeader(unsigned char *pMimeFieldName, unsigned char *pMimeFieldValue, unsigned int *pMimeValueLen);
 #endif /*__HTTP_H__*/

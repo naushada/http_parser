@@ -37,7 +37,6 @@ typedef void *yyscan_t;
 %type <str> request_line 
 %type <str> response_line 
 %type <str> message_body 
-%type <str> delimeter 
 
 %define parse.error verbose
 %define parse.lac full
@@ -60,7 +59,7 @@ http_message
   ;
 
 message_body
-  : %empty
+  : %empty            {printf("\nHTTP Body Ends");}
   | STRING
   ; 
 
@@ -70,13 +69,15 @@ mime_headers
   ;
 
 mime_header
-  : PARAM SPACE VALUE  {printf("Mime Header %s %s", $1, $3);}
-  | %empty
-  | CRLF
+  : PARAM SPACE VALUE  {unsigned int tmpLen = 0;
+                        __httpMimeHeader($1, $3, &tmpLen);}
+
+  | %empty             {printf("\nMime Header End");}
+  | CRLF               {printf("HTTP Body Starts\n");}
   ;
 
 request_line
-  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {printf("\n$1 %s\n$5 %s \n", $1, $5);}
+  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {__httpRequestLine($1, $3, $5);}
   ;
 
 response_line
