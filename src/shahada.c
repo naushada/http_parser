@@ -124,7 +124,7 @@ void __httpMimeHeader(unsigned char *pMimeFieldName,
       }
       *((char *) memcpy(pHttpMessageG->http_header.field, 
                         pMimeFieldName, 
-                        strlen((char *)pMimeFieldName))) = '\0';
+                        strlen((char *)pMimeFieldName))) = 0;
 
       pHttpMessageG->http_header.value = (unsigned char *)malloc(*pMimeValueLen + 1);
       if(!pHttpMessageG->http_header.value)
@@ -138,14 +138,15 @@ void __httpMimeHeader(unsigned char *pMimeFieldName,
              pMimeFieldValue,
              *pMimeValueLen);
       pHttpMessageG->http_header.next = NULL;
+      fprintf(stderr, "[Naushad] field %s value %s",pMimeFieldName, pMimeFieldValue);
       break;
     }
 
     /*Go to the end of the linked list.*/
-    http_header_t *tmpNode = pHttpMessageG->http_header.next;
+    http_header_t *tmpNode = &pHttpMessageG->http_header;
     http_header_t *prevNode = NULL;
 
-    while(tmpNode && tmpNode->next)
+    while(tmpNode)
     {
       prevNode = tmpNode;
       tmpNode = tmpNode->next;    
@@ -158,28 +159,59 @@ void __httpMimeHeader(unsigned char *pMimeFieldName,
       break;
     }
 
+    /*Establish the node link or node chain.*/
     prevNode->next = tmpNode;
+
+    tmpNode->field = (unsigned char *)malloc(strlen((char *)pMimeFieldName) + 1);
+    if(!tmpNode->field)
+    {
+      /*Add the debug log.*/
+      break;
+    }
+
     *((char *) memcpy(tmpNode->field, 
                       pMimeFieldName, 
-                      strlen((char *)pMimeFieldName))) = '\0';
+                      strlen((char *)pMimeFieldName))) = 0;
 
-    tmpNode->value = (unsigned char *)malloc(*pMimeValueLen);
+    tmpNode->value = (unsigned char *)malloc(*pMimeValueLen + 1);
     if(!tmpNode->value)
     {
        /*Add debug log.*/
        break;
     }
 
-    memset((void *)tmpNode->value, 0, *pMimeValueLen);
+    memset((void *)tmpNode->value, 0, *pMimeValueLen + 1);
     memcpy(tmpNode->value,
            pMimeFieldValue,
            *pMimeValueLen);
+
     tmpNode->next = NULL;
+    fprintf(stderr, "[Naushad] 11. field %s value %s",pMimeFieldName, pMimeFieldValue);
 
   }while(0);
 
+  __httpDisplayMimeHeader(pHttpMessageG);
 }
 
+void __httpDisplayMimeHeader(http_message_t *pHttpMessage)
+{
+  do 
+  {
+    if(!pHttpMessage)
+    {
+      /*Add the debug log.*/
+      break;
+    }
+   
+    http_header_t *tmpHeader = &pHttpMessage->http_header;
+    while(tmpHeader)
+    {
+      fprintf(stderr, "Field Name: %s Value: %s\n", tmpHeader->field, tmpHeader->value);
+      tmpHeader = tmpHeader->next;
+    }
+
+  }while(0);
+}
 
 int __http_process_request(unsigned char *HTTP_method, unsigned char *HTTP_version)
 {

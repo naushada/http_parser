@@ -18,13 +18,17 @@ typedef void *yyscan_t;
   http_message_t *message;
   http_qs_t      *request_line;
   http_header_t  *header_line;
+  char  *pField;
+  unsigned int   fieldNameLen;
+  char  *pValue;
+  unsigned int   fieldValueLen;
   unsigned char  *str;
-  unsigned int   offset;
 }
 
 /*! tokens are looked in lex file for pattern matching*/
 %token <str> STRING HTTP_METHOD HTTP_VERSION QS RESOURCE CRLF SPACE
-%token <str> PARAM VALUE
+%token <pField>  PARAM
+%token <pValue>  VALUE
 %token <int> STATUS_CODE
 
 %type <request_line> request_URI 
@@ -69,9 +73,7 @@ mime_headers
   ;
 
 mime_header
-  : PARAM SPACE VALUE  {unsigned int tmpLen = 0;
-                        __httpMimeHeader($1, $3, &tmpLen);}
-
+  : PARAM SPACE VALUE  {printf("[Naushad]$1 %s $2 %s", $1, $2);unsigned int xx = 6; __httpMimeHeader($1, $2, &xx);}
   | %empty             {printf("\nMime Header End");}
   | CRLF               {printf("HTTP Body Starts\n");}
   ;

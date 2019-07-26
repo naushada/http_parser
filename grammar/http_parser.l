@@ -5,6 +5,7 @@
 #include "shahada.h"
 
 extern int yyerror(yyscan_t yyscanner, const char *s);
+unsigned int idx = 0;
 
 int yywrap(yyscan_t yyscanner) 
 {
@@ -89,8 +90,17 @@ NEWLINE              "\n"
 
  /*Parsing MIME Header Field*/
 <INITIAL>{MIME_PARAM_NAME}+ {
-  printf("MIME_FIELD is %s\n",yytext);
+
+  /*Initialization now.*/  
+  yylval->fieldNameLen = 0;
+  yylval->pField = (char *)malloc(sizeof(char) * 1024);
+  memset((void *)yylval->pField, 0, sizeof(char) * 1024);
+  yylval->fieldValueLen = 0;
+  yylval->pValue = (char *)malloc(sizeof(char) * 1024);
+  memset((void *)yylval->pValue, 0, sizeof(char) *1024);
+  printf("[Naushad] Initialised to zero fieldNameLen %d \n", idx);
   BEGIN MIME_PARAM_SCAN;
+
 }
 
  /*! scanning mime-field name which ends with :*/
@@ -98,12 +108,18 @@ NEWLINE              "\n"
   if(':' == *yytext)
   {
     BEGIN MIME_PARAM_VALUE_SCAN;
-    //yylval->str[yylval->offset] = 0;
-    printf("The value is %s\n", yytext);
+    /*Make it null terminated*/
+    //yylval->pField[yylval->fieldNameLen] = 0;
+    yylval->pField[idx] = 0;
+    printf("Len is %d FieldName is %s\n",
+           idx, yylval->pField);
+    idx = 0;
     return(PARAM);
   }
-  //yylval->str[yylval->offset++] = *yytext;
-  printf("(Naushad)The value is %s\n", yytext);
+
+  /*copy individual character*/
+  //yylval->pField[yylval->fieldNameLen++] = *yytext;
+  yylval->pField[idx++] = *yytext;
 }
 
  /*!mime-param-value scan- which starts with preceeding SPACE*/
@@ -115,10 +131,16 @@ NEWLINE              "\n"
 <MIME_PARAM_VALUE_SCAN>{CHAR_EXCEPT_NEWLINE} {
   if('\r' == *yytext)
   {
-    /*!mime value scanning completes*/    
+    /*Make it null terminated*/
+    yylval->pValue[idx] = 0;
+    idx = 0;
+    printf("\nfieldVale is %s", yylval->pValue);
   }
-  /*!Collecting individual character*/
-  printf("\nMime Valus is %s\n", yytext);
+
+  /*copy individual character*/
+  //yylval->pValue[yylval->fieldValueLen++] = *yytext;
+  yylval->pValue[idx++] = *yytext;
+
 }
 
  /*!Check for new mime-header.*/
@@ -149,10 +171,8 @@ NEWLINE              "\n"
 <MESSAGE_BODY_SCAN_START>{CHAR_EXCEPT_NEWLINE} {
   if('\r' == *yytext)
   {
-    printf("\n 11. Inside Body ");
     return(STRING);
   }
-  printf("\n Inside Body ");
 }
 
 <MESSAGE_BODY_SCAN_START>{NEWLINE} {
