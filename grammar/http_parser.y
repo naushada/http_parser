@@ -54,7 +54,7 @@ typedef void *yyscan_t;
 %%
 
 http_message
-  : request_line mime_headers    {printf("Value of Mime Heade is %s", $2);}
+  : request_line mime_headers    {printf("Value of Mime Header is %s", $2);}
   | request_line 
   | response_line mime_headers
   | response_line
@@ -73,9 +73,9 @@ mime_headers
   ;
 
 mime_header
-  : PARAM SPACE VALUE  {printf("[Naushad]$1 %s $2 %s", $1, $2);unsigned int xx = 6; __httpMimeHeader($1, $2, &xx);}
-  | %empty             {printf("\nMime Header End");}
-  | CRLF               {printf("HTTP Body Starts\n");}
+  : PARAM SPACE VALUE  {fprintf(stderr, "[Naushad]$1 %s $2 %s", $1, $2);unsigned int xx = 6; __httpMimeHeader($1, $2, &xx);}
+  | %empty             {fprintf(stderr, "\nMime Header End");}
+  | CRLF               {fprintf(stderr, "HTTP Body Starts\n");}
   ;
 
 request_line
