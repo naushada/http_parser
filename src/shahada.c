@@ -95,9 +95,8 @@ void __httpRequestLine(unsigned char *pHttpMethod,
  * @param 
  * @return 
  * */
-void __httpMimeHeader(unsigned char *pMimeFieldName, 
-                      unsigned char *pMimeFieldValue, 
-                      unsigned int *pMimeValueLen)
+void __httpMimeHeader(char *pMimeFieldName, 
+                      char *pMimeFieldValue) 
 {
   do 
   {
@@ -116,29 +115,30 @@ void __httpMimeHeader(unsigned char *pMimeFieldName,
     if(!pHttpMessageG->http_header.field ||
        !pHttpMessageG->http_header.value)
     {
-      pHttpMessageG->http_header.field = (unsigned char *)malloc(strlen((char *)pMimeFieldName) + 1);
+      pHttpMessageG->http_header.field = (unsigned char *)malloc(strlen(pMimeFieldName) + 1);
       if(!pHttpMessageG->http_header.field)
       {
         /*Add debug log.*/
         break;
       }
-      *((char *) memcpy(pHttpMessageG->http_header.field, 
-                        pMimeFieldName, 
-                        strlen((char *)pMimeFieldName))) = 0;
+      strncpy(pHttpMessageG->http_header.field, 
+              pMimeFieldName, 
+              strlen(pMimeFieldName));
 
-      pHttpMessageG->http_header.value = (unsigned char *)malloc(*pMimeValueLen + 1);
+      pHttpMessageG->http_header.value = (unsigned char *)malloc(strlen(pMimeFieldValue) + 1);
       if(!pHttpMessageG->http_header.value)
       {
         /*Add debug log.*/
         break;
       }
 
-      memset((void *)pHttpMessageG->http_header.value, 0, *pMimeValueLen + 1);
+      memset((void *)pHttpMessageG->http_header.value, 0, strlen(pMimeFieldValue) + 1);
       memcpy(pHttpMessageG->http_header.value,
              pMimeFieldValue,
-             *pMimeValueLen);
+             strlen(pMimeFieldValue));
+
       pHttpMessageG->http_header.next = NULL;
-      fprintf(stderr, "[Naushad] field %s value %s",pMimeFieldName, pMimeFieldValue);
+      fprintf(stderr, "[Naushad] field %s value %s\n",pMimeFieldName, pMimeFieldValue);
       break;
     }
 
@@ -162,31 +162,31 @@ void __httpMimeHeader(unsigned char *pMimeFieldName,
     /*Establish the node link or node chain.*/
     prevNode->next = tmpNode;
 
-    tmpNode->field = (unsigned char *)malloc(strlen((char *)pMimeFieldName) + 1);
+    tmpNode->field = (unsigned char *)malloc(strlen(pMimeFieldName) + 1);
     if(!tmpNode->field)
     {
       /*Add the debug log.*/
       break;
     }
 
-    *((char *) memcpy(tmpNode->field, 
-                      pMimeFieldName, 
-                      strlen((char *)pMimeFieldName))) = 0;
+    strncpy(tmpNode->field, 
+            pMimeFieldName, 
+            strlen((char *)pMimeFieldName));
 
-    tmpNode->value = (unsigned char *)malloc(*pMimeValueLen + 1);
+    tmpNode->value = (unsigned char *)malloc(strlen(pMimeFieldValue) + 1);
     if(!tmpNode->value)
     {
        /*Add debug log.*/
        break;
     }
 
-    memset((void *)tmpNode->value, 0, *pMimeValueLen + 1);
+    memset((void *)tmpNode->value, 0, strlen(pMimeFieldValue) + 1);
     memcpy(tmpNode->value,
            pMimeFieldValue,
-           *pMimeValueLen);
+           strlen(pMimeFieldValue));
 
     tmpNode->next = NULL;
-    fprintf(stderr, "[Naushad] 11. field %s value %s",pMimeFieldName, pMimeFieldValue);
+    fprintf(stderr, "[Naushad] 11. field %s value %s\n",pMimeFieldName, pMimeFieldValue);
 
   }while(0);
 

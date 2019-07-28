@@ -32,7 +32,7 @@ NUMBER               {INTEGER}\.{DIGIT}+
 ALPHA                [a-zA-Z]
 ALPHANUM             [a-zA-Z0-9]
 HEX                  [0-9a-fA-F]
-CRLF                 [\r\n]
+CRLF                 \r\n
 SPACE                [ ]
 PROTOCOL             (HTTP)\/{DIGIT}\.{DIGIT} 
 METHOD               (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
@@ -84,7 +84,7 @@ NEWLINE              "\n"
   return STATUS_CODE;
 }
 
-<INITIAL>{CRLF}$ {
+<INITIAL>{CRLF} {
   printf("MIME Header Starts. \n");
   BEGIN MIME_PARAM_SCAN;
 

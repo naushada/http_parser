@@ -107,7 +107,7 @@ http_message_t *http_init(void);
 
 void __httpRequestLine(unsigned char *pHttpMethod, unsigned char *pUri, unsigned char *pHttpVersion);
 
-void __httpMimeHeader(unsigned char *pMimeFieldName, unsigned char *pMimeFieldValue, unsigned int *pMimeValueLen);
+void __httpMimeHeader(char *pMimeFieldName, char *pMimeFieldValue);
 
 void __httpDisplayMimeHeader(http_message_t *pHttpMessage);
 #endif /*__HTTP_H__*/
