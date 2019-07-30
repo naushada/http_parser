@@ -12,12 +12,17 @@ http_message_t *pHttpMessageG = NULL;
  * @param 
  * @return 
  * */
-void __httpRequestLine(unsigned char *pHttpMethod, 
-                       unsigned char *pUri, 
-                       unsigned char *pHttpVersion)
+http_qs_t *__httpRequestLine(char *pHttpMethod, 
+                             char *pUri, 
+                             char *pHttpVersion)
 {
+  http_qs_t *__pReq = NULL;
+
+  fprintf(stderr, "pHttpMethod %s pUri %s pHttpVersion %s",
+          pHttpMethod, pUri, pHttpVersion);
+
   struct __http_method_t __httpMethodArr[] = 
-{
+  {
     {OPTIONS, "OPTIONS", 7},
     {GET,     "GET",     3},
     {HEAD,    "HEAD",    4},
@@ -55,14 +60,14 @@ void __httpRequestLine(unsigned char *pHttpMethod,
       break;
     }
 
-    pHttpMessageG = (http_message_t *)malloc(sizeof(http_message_t));
-    if(!pHttpMessageG)
+    __pReq = (http_qs_t *)malloc(sizeof(http_qs_t));
+    if(!__pReq)
     {
       /*Debug Message to be added.*/  
       break;
     }
 
-    memset((void *)pHttpMessageG, 0, sizeof(http_message_t));
+    memset((void *)__pReq, 0, sizeof(http_qs_t));
    
     /*Translating HTTP Method.*/
     int idx = 0;
@@ -70,7 +75,7 @@ void __httpRequestLine(unsigned char *pHttpMethod,
     {
       if(!strncmp(pHttpMethod, __httpMethodArr[idx].pHttpMethodStr, __httpMethodArr[idx].strLen))
       {
-        pHttpMessageG->http_req.method = __httpMethodArr[idx].httpMethod;
+        __pReq->method = __httpMethodArr[idx].httpMethod;
         break;
       }
     }
@@ -80,13 +85,18 @@ void __httpRequestLine(unsigned char *pHttpMethod,
     {
       if(!strncmp(pHttpVersion, __httpVersionArr[idx].pVersionStr, __httpVersionArr[idx].strLen))
       {
-        pHttpMessageG->http_req.version = __httpVersionArr[idx].httpVersion;
+        __pReq->version = __httpVersionArr[idx].httpVersion;
         break;
       }
     }
 
+    /*Copying URI*/
+    memset((void *)__pReq->resource_name, 0, sizeof(__pReq->resource_name));
+    strncpy(__pReq->resource_name, pUri, strlen(pUri));
+
   }while(0);
 
+  return(__pReq);
 }
 
 /*

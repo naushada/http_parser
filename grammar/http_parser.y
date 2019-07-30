@@ -18,11 +18,9 @@ typedef void *yyscan_t;
   http_message_t *message;
   http_qs_t      *request_line;
   http_header_t  *header_line;
-  char  *pField;
-  unsigned int   fieldNameLen;
-  char  *pValue;
-  unsigned int   fieldValueLen;
-  unsigned char  *str;
+  char           *pField;
+  char           *pValue;
+  char           *str;
 }
 
 /*! tokens are looked in lex file for pattern matching*/
@@ -38,7 +36,7 @@ typedef void *yyscan_t;
 %type <message> http_message
 %type <message> http_messages
 %type <str> URI
-%type <str> request_line 
+%type <request_line> request_line 
 %type <str> response_line 
 %type <str> message_body 
 
@@ -58,7 +56,7 @@ http_message
   | request_line mime_headers
   | response_line
   | response_line mime_headers
-  | message_body
+  | mime_headers message_body
   ;
 
 message_body
@@ -72,13 +70,13 @@ mime_headers
   ;
 
 mime_header
-  : PARAM SPACE VALUE  {fprintf(stderr, "[Naushad]$1 %s $2 %s\n", $1, $3); __httpMimeHeader($1, $3);}
+  : PARAM SPACE VALUE  {__httpMimeHeader($1, $3);}
   | %empty             {fprintf(stderr, "Mime Header End\n");}
   | CRLF               {fprintf(stderr, "HTTP Body Starts\n");}
   ;
 
 request_line
-  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {__httpRequestLine($1, $3, $5);}
+  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);}
   ;
 
 response_line

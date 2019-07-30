@@ -53,7 +53,7 @@ NEWLINE              "\n"
 
 <INITIAL>{METHOD}+ {
   printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
-  yylval->str = (unsigned char *)yytext;
+  yylval->str = strdup(yytext); 
   return HTTP_METHOD;
 }
 
@@ -69,12 +69,13 @@ NEWLINE              "\n"
 
 <INITIAL>"/" {
   printf("Got the / (%s)\n", yytext);
+  yylval->str = strdup(yytext);
   return('/');		
 }
 
 <INITIAL>{PROTOCOL} {
   printf("Got the Protocol %s\n", yytext);
-  yylval->str = (unsigned char *)yytext;
+  yylval->str = strdup(yytext);
   return HTTP_VERSION;
 }
 
@@ -97,6 +98,11 @@ NEWLINE              "\n"
   return EOF;
 }
 
+<MIME_PARAM_SCAN><<EOF>> {
+  printf("Parsed successfully\n");
+  return EOF;
+}
+
  /*!end-delimiter for mime-header i.e. \r\n\r\n*/
 <MIME_PARAM_SCAN>{BODY_START} {
   fprintf(stderr, "[Naushad] HTTP Body Starts\n");  
@@ -105,7 +111,6 @@ NEWLINE              "\n"
 }
 
 <MIME_PARAM_SCAN>{HEADER_FIELD}+ {
-  printf("\nMIME_PARAM_NAME %s\n", yytext);
   yylval->pField = strdup(yytext);
   BEGIN MIME_DELIMITER;
   return(PARAM);
@@ -117,7 +122,6 @@ NEWLINE              "\n"
 }
 
 <MIME_PARAM_VALUE_SCAN>{HEADER_VALUE}+ {
-  printf("\nPARAM Value is %s\n", yytext);
   BEGIN MIME_VALUE_DELIMITER;
   yylval->pValue = strdup(yytext);
   return(VALUE);

@@ -68,7 +68,7 @@ struct http_qs
 {
   http_method_t method;
   http_version_t version;
-  unsigned char resource_name[__HTTP_MAX_URI_SIZE];
+  char resource_name[__HTTP_MAX_URI_SIZE];
   qs_param_t qs_param;
   
 };
@@ -105,7 +105,9 @@ unsigned char *__http_parser_ex(char *pIn);
 
 http_message_t *http_init(void);
 
-void __httpRequestLine(unsigned char *pHttpMethod, unsigned char *pUri, unsigned char *pHttpVersion);
+http_qs_t *__httpRequestLine(char *pHttpMethod, 
+                             char *pUri, 
+                             char *pHttpVersion);
 
 void __httpMimeHeader(char *pMimeFieldName, char *pMimeFieldValue);
 
