@@ -6,6 +6,7 @@
 #include "http_parser.yy.h"
 
 int yyerror(yyscan_t yyscanner, const char *s);
+http_message_t *__PMessage;
 %}
 
 /*! Copies this piece of code verbatim in header file*/
@@ -17,7 +18,7 @@ typedef void *yyscan_t;
 %union {
   http_message_t *message;
   http_qs_t      *request_line;
-  http_header_t  *header_line;
+  http_headers_t *http_headers;
   char           *pField;
   char           *pValue;
   char           *str;
@@ -30,11 +31,8 @@ typedef void *yyscan_t;
 %token <int> STATUS_CODE
 
 %type <request_line> request_URI 
-%type <header_line> mime_header 
-%type <header_line> mime_headers 
-%type <message> generic_message
+%type <http_headers> mime_headers 
 %type <message> http_message
-%type <message> http_messages
 %type <str> URI
 %type <request_line> request_line 
 %type <str> response_line 
@@ -47,36 +45,35 @@ typedef void *yyscan_t;
 %param {yyscan_t yyscanner}
 
 /*! Starting point of the Grammar*/
-%start http_message
+%start input
 
 %%
 
+input
+  : http_message  {__PMessage = $1;__httpDisplayMimeHeader($1);}
+  ;
+
 http_message
   : request_line     {printf("Value of Mime Header is %s\n", $1);}
-  | request_line mime_headers
+  | request_line mime_headers {$$ = __httpMessage($1, $2);}
   | response_line
   | response_line mime_headers
-  | mime_headers message_body
+  | mime_headers message_body {fprintf(stderr, "\n[Naushad] 2.http_message");}
   ;
 
 message_body
   : %empty            {printf("HTTP Body Ends\n");}
-  | STRING
+  | STRING CRLF
   ; 
 
 mime_headers
-  : %empty
-  | mime_headers mime_header
-  ;
-
-mime_header
-  : PARAM SPACE VALUE  {__httpMimeHeader($1, $3);}
-  | %empty             {fprintf(stderr, "Mime Header End\n");}
-  | CRLF               {fprintf(stderr, "HTTP Body Starts\n");}
+  : PARAM SPACE VALUE CRLF                {$$ = __httpInsertMimeHeader(NULL, $1, $3);} 
+  | mime_headers PARAM SPACE VALUE CRLF   {$$ = __httpInsertMimeHeader($1, $2, $4);}
+  | CRLF message_body       {fprintf(stderr, "\n HTTP Body Starts\n");}
   ;
 
 request_line
-  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);}
+  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);free($1);free($3);free($5);}
   ;
 
 response_line

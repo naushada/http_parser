@@ -3,7 +3,18 @@
 #include "http_parser.yy.h"
 #include "shahada.h"
 
-http_message_t *pHttpMessageG = NULL;
+extern http_message_t *__PMessage;
+
+http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *headers)
+{
+  http_message_t *__httpReq = NULL;
+  __httpReq = (http_message_t *)malloc(sizeof(http_message_t));
+  memset((void *)__httpReq, 0, sizeof(http_message_t));
+
+  __httpReq->http_req = reqLine;
+  __httpReq->http_headers = headers;
+  return(__httpReq);
+}
 
 /*
  * @brief:
@@ -99,108 +110,56 @@ http_qs_t *__httpRequestLine(char *pHttpMethod,
   return(__pReq);
 }
 
-/*
- * @brief 
- * @param 
- * @param 
- * @return 
- * */
-void __httpMimeHeader(char *pMimeFieldName, 
-                      char *pMimeFieldValue) 
+http_headers_t *__httpInsertMimeHeader(http_headers_t *headers, char *field, char *value)
 {
+  return __httpAddMimeHeader(headers, __httpNewMimeHeader(field, value));
+}
+
+http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newNode)
+{
+  http_headers_t *tmp = (http_headers_t*)malloc(sizeof(http_headers_t));
+  memset((void *)tmp, 0, sizeof(http_headers_t));
+
+  tmp->header = newNode;
+  tmp->next = NULL;
+
+  if(!headers) 
+  {
+    fprintf(stderr, "\n(headers is NULL - Returning First Header field %s value %s\n", tmp->header->field, tmp->header->value);  
+    return tmp;
+  }
+
+  http_headers_t *m;
+  for(m = headers; m->next; m = m->next) {}
+    m->next = tmp;
+
+  return headers;
+}
+
+http_header_t *__httpNewMimeHeader(char *pMimeFieldName, 
+                                   char *pMimeFieldValue)
+{
+  http_header_t *fNode = NULL;
+
   do 
   {
-    if(!pMimeFieldName || !pMimeFieldValue)
+    fNode = (http_header_t*)malloc(sizeof(http_header_t));
+    
+    if(!fNode)
     {
-      /*Add debug log.*/
-      break;
+      /*Add the debug log*/
+      break;  
     }
 
-    if(!pHttpMessageG)
-    {
-      /*Add debug log.*/
-      break;
-    }
+    memset((void *)fNode, 0, sizeof(http_header_t));
+    fNode->field = strdup(pMimeFieldName);
+    fNode->value = strdup(pMimeFieldValue);
+    fprintf(stderr, "\nfield %s value %s\n", fNode->field, fNode->value);
+    break;
 
-    if(!pHttpMessageG->http_header.field ||
-       !pHttpMessageG->http_header.value)
-    {
-      pHttpMessageG->http_header.field = (unsigned char *)malloc(strlen(pMimeFieldName) + 1);
-      if(!pHttpMessageG->http_header.field)
-      {
-        /*Add debug log.*/
-        break;
-      }
-      strncpy(pHttpMessageG->http_header.field, 
-              pMimeFieldName, 
-              strlen(pMimeFieldName));
+  } while(0);
 
-      pHttpMessageG->http_header.value = (unsigned char *)malloc(strlen(pMimeFieldValue) + 1);
-      if(!pHttpMessageG->http_header.value)
-      {
-        /*Add debug log.*/
-        break;
-      }
-
-      memset((void *)pHttpMessageG->http_header.value, 0, strlen(pMimeFieldValue) + 1);
-      memcpy(pHttpMessageG->http_header.value,
-             pMimeFieldValue,
-             strlen(pMimeFieldValue));
-
-      pHttpMessageG->http_header.next = NULL;
-      fprintf(stderr, "[Naushad] field %s value %s\n",pMimeFieldName, pMimeFieldValue);
-      break;
-    }
-
-    /*Go to the end of the linked list.*/
-    http_header_t *tmpNode = &pHttpMessageG->http_header;
-    http_header_t *prevNode = NULL;
-
-    while(tmpNode)
-    {
-      prevNode = tmpNode;
-      tmpNode = tmpNode->next;    
-    }
-
-    tmpNode = (http_header_t *)malloc(sizeof(http_header_t));
-    if(!tmpNode)
-    {
-      /*Add debug log.*/
-      break;
-    }
-
-    /*Establish the node link or node chain.*/
-    prevNode->next = tmpNode;
-
-    tmpNode->field = (unsigned char *)malloc(strlen(pMimeFieldName) + 1);
-    if(!tmpNode->field)
-    {
-      /*Add the debug log.*/
-      break;
-    }
-
-    strncpy(tmpNode->field, 
-            pMimeFieldName, 
-            strlen((char *)pMimeFieldName));
-
-    tmpNode->value = (unsigned char *)malloc(strlen(pMimeFieldValue) + 1);
-    if(!tmpNode->value)
-    {
-       /*Add debug log.*/
-       break;
-    }
-
-    memset((void *)tmpNode->value, 0, strlen(pMimeFieldValue) + 1);
-    memcpy(tmpNode->value,
-           pMimeFieldValue,
-           strlen(pMimeFieldValue));
-
-    tmpNode->next = NULL;
-    fprintf(stderr, "[Naushad] 11. field %s value %s\n",pMimeFieldName, pMimeFieldValue);
-
-  }while(0);
-
-  __httpDisplayMimeHeader(pHttpMessageG);
+  return(fNode);
 }
 
 void __httpDisplayMimeHeader(http_message_t *pHttpMessage)
@@ -213,10 +172,10 @@ void __httpDisplayMimeHeader(http_message_t *pHttpMessage)
       break;
     }
    
-    http_header_t *tmpHeader = &pHttpMessage->http_header;
+    http_headers_t *tmpHeader = pHttpMessage->http_headers;
     while(tmpHeader)
     {
-      fprintf(stderr, "Field Name: %s Value: %s\n", tmpHeader->field, tmpHeader->value);
+      fprintf(stderr, "Field Name: %s Value: %s\n", tmpHeader->header->field, tmpHeader->header->value);
       tmpHeader = tmpHeader->next;
     }
 
@@ -233,7 +192,7 @@ int __http_process_request(unsigned char *HTTP_method, unsigned char *HTTP_versi
 int __http_process_qs(unsigned char *pResource, unsigned char *pQs)
 {
   fprintf(stderr, "[%s:%d] resource %s qs %s\n", 
-																		 __func__, __LINE__, pResource, pQs);
+					 __func__, __LINE__, pResource, pQs);
   return(0);		
 }
 
@@ -257,7 +216,7 @@ int __http_process_default_uri(void)
   return(0);		
 }
 
-unsigned char *__http_parser_ex(char *pIn) 
+int __http_parser_ex(char *pIn) 
 {
   yyscan_t yyscanner;
   unsigned char *str = NULL;
@@ -267,6 +226,8 @@ unsigned char *__http_parser_ex(char *pIn)
     fprintf(stderr, "%s:%d initialization to scanner failed\n", __FILE__, __LINE__);
     return((unsigned char *)0);
   }
+
+  __PMessage = http_init();
 
   YY_BUFFER_STATE buff = pIn ? yy_scan_string(pIn, yyscanner) : 0;
 

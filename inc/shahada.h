@@ -48,11 +48,16 @@ struct __http_version_t
   unsigned char strLen;
 };
 
-struct http_header
+typedef struct http_header 
 {
-  unsigned char *field;
-  unsigned char *value;
-  struct http_header *next;
+  char *field;
+  char *value;
+}http_header_t;
+
+struct http_headers
+{
+  http_header_t *header;  
+  struct http_headers *next;
 };
 
 struct qs_param
@@ -81,14 +86,14 @@ struct http_body
 };
 
 typedef struct http_qs http_qs_t;
-typedef struct http_header http_header_t;
+typedef struct http_headers http_headers_t;
 typedef struct http_body http_body_t;
 
 struct http_req
 {
-  http_qs_t     http_req;
-  http_header_t http_header;
-  http_body_t   http_body;
+  http_qs_t      *http_req;
+  http_headers_t *http_headers;
+  http_body_t    *http_body;
 
 };
 
@@ -101,7 +106,7 @@ int __http_process_qs(unsigned char *pResource, unsigned char *pQs);
 int __http_process_default_uri(void);
 int __http_process_options(void);
 
-unsigned char *__http_parser_ex(char *pIn);
+int __http_parser_ex(char *pIn);
 
 http_message_t *http_init(void);
 
@@ -109,7 +114,12 @@ http_qs_t *__httpRequestLine(char *pHttpMethod,
                              char *pUri, 
                              char *pHttpVersion);
 
-void __httpMimeHeader(char *pMimeFieldName, char *pMimeFieldValue);
+http_header_t *__httpNewMimeHeader(char *pMimeFieldName, 
+                                   char *pMimeFieldValue);
 
 void __httpDisplayMimeHeader(http_message_t *pHttpMessage);
+
+http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newNode);
+http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *header);
+
 #endif /*__HTTP_H__*/

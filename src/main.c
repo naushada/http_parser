@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
                     "\r\n\r\n"
                     "a=b&c=d\r\n";
   //char buff[2048] = "HTTP/1.1 200 OK\r\nGET / HTTP/1.1\r\n";
+#if 0
   unsigned char *http_value;
   if ((http_value = __http_parser_ex(buff))) 
   {
@@ -20,6 +21,6 @@ int main(int argc, char **argv) {
   {
     printf("%s:%d HTTP Parser error!\n", __FILE__, __LINE__);
   }
-
-  return 0;
+#endif
+  return __http_parser_ex(buff);
 }
