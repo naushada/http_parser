@@ -5,7 +5,6 @@
 #include "shahada.h"
 
 extern int yyerror(yyscan_t yyscanner, const char *s);
-unsigned int idx = 0;
 
 int yywrap(yyscan_t yyscanner) 
 {
@@ -21,8 +20,8 @@ int yywrap(yyscan_t yyscanner)
 %option header-file="parser/http_parser.yy.h"
 %option outfile="parser/http_parser.yy.c"
 
-/*Exclusive State for String Matching*/
-%x STRING MIME_PARAM_SCAN MIME_PARAM_VALUE_SCAN 
+ /*Exclusive State for String Matching*/
+%x MIME_PARAM_SCAN MIME_PARAM_VALUE_SCAN 
 %x HTTP_BODY_SCAN MESSAGE_BODY_SCAN_START MIME_DELIMITER 
 %x MIME_VALUE_DELIMITER
 
@@ -151,7 +150,8 @@ NEWLINE              "\n"
 
 <MESSAGE_BODY_SCAN_START>{HEADER_VALUE}+ {
   fprintf(stderr, "\nBody Value is %s\n", yytext);
-  return(STRING);
+  yylval->str = strdup(yytext);
+  return(lSTRING);
 }
 
 

@@ -121,5 +121,8 @@ void __httpDisplayMimeHeader(http_message_t *pHttpMessage);
 
 http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newNode);
 http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *header);
+http_headers_t *__httpInsertMimeHeader(http_headers_t *headers, 
+                                       char *field, 
+                                       char *value);
 
 #endif /*__HTTP_H__*/
