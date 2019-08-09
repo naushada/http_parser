@@ -155,6 +155,8 @@ http_header_t *__httpNewMimeHeader(char *pMimeFieldName,
     fNode->field = strdup(pMimeFieldName);
     fNode->value = strdup(pMimeFieldValue);
     fprintf(stderr, "\nfield %s value %s\n", fNode->field, fNode->value);
+    free(pMimeFieldName);
+    free(pMimeFieldValue);
     break;
 
   } while(0);

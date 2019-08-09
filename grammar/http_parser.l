@@ -32,7 +32,7 @@ NUMBER               {INTEGER}\.{DIGIT}+
 ALPHA                [a-zA-Z]
 ALPHANUM             [a-zA-Z0-9]
 HEX                  [0-9a-fA-F]
-CRLF                 \r\n
+CRLF                 (\r\n)
 SPACE                [ ]
 PROTOCOL             (HTTP)\/{DIGIT}\.{DIGIT} 
 METHOD               (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
@@ -43,7 +43,7 @@ HEADER_FIELD         [^:]
 DELIMITER            [:][ ]
  /*Any character except \r*/
 HEADER_VALUE         [^\r]
-BODY_START           {CRLF}{2}
+BODY_START           (\r\n\r\n\r\n) 
 CHAR_EXCEPT_NEWLINE  .
 NEWLINE              "\n"
 
@@ -51,37 +51,31 @@ NEWLINE              "\n"
 %%
 
 
-<INITIAL>{METHOD}+ {
-  printf("Matched with METHOD (%s) length %zu\n", yytext, yyleng);
+<INITIAL>{METHOD} {
   yylval->str = strdup(yytext); 
   return HTTP_METHOD;
 }
 
-<INITIAL>{SPACE}+ {
-  printf("matched with WS\n");
+<INITIAL>{SPACE} {
   return SPACE;
 }
 
 <INITIAL>"*" {
-  printf("Got the star\n");
   return('*');		
 }
 
 <INITIAL>"/" {
-  printf("Got the / (%s)\n", yytext);
   yylval->str = strdup(yytext);
   return('/');		
 }
 
 <INITIAL>{PROTOCOL} {
-  printf("Got the Protocol %s\n", yytext);
   yylval->str = strdup(yytext);
   return HTTP_VERSION;
 }
 
 
 <INITIAL>{DIGIT}{3} {
-  printf("Status Code is %d\n", atoi(yytext));
   return STATUS_CODE;
 }
 
@@ -112,6 +106,7 @@ NEWLINE              "\n"
 
 <MIME_PARAM_SCAN>{HEADER_FIELD}+ {
   yylval->pField = strdup(yytext);
+  fprintf(stderr, "\nHeader Field is %s\n", yylval->pField);
   BEGIN MIME_DELIMITER;
   return(PARAM);
 }
@@ -127,8 +122,15 @@ NEWLINE              "\n"
   return(VALUE);
 }
 
+<MIME_VALUE_DELIMITER>{BODY_START} {
+  BEGIN MESSAGE_BODY_SCAN_START;
+  fprintf(stderr, "\nBody Starts now\n");
+  return(CRLF);
+}
+
 <MIME_VALUE_DELIMITER>{CRLF} {
   BEGIN MIME_PARAM_SCAN;
+  fprintf(stderr, "\nMatched CRLF");
   return(CRLF);
 }
 
@@ -143,15 +145,12 @@ NEWLINE              "\n"
 <MESSAGE_BODY_SCAN_START>{CRLF} {
   /*!move to INITIAL state.*/    
   BEGIN INITIAL;  
+  fprintf(stderr, "\nEnd of Body\n");
   return(CRLF);
 }
 
-<MESSAGE_BODY_SCAN_START>{NEWLINE} {
-  BEGIN INITIAL;
-  return(STRING);
-}
-
-<MESSAGE_BODY_SCAN_START>{CHAR_EXCEPT_NEWLINE}+ {
+<MESSAGE_BODY_SCAN_START>{HEADER_VALUE}+ {
+  fprintf(stderr, "\nBody Value is %s\n", yytext);
   return(STRING);
 }
 

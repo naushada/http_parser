@@ -56,20 +56,20 @@ input
 http_message
   : request_line     {printf("Value of Mime Header is %s\n", $1);}
   | request_line mime_headers {$$ = __httpMessage($1, $2);}
+  | request_line mime_headers message_body {$$ = __httpMessage($1, $2);}
   | response_line
   | response_line mime_headers
-  | mime_headers message_body {fprintf(stderr, "\n[Naushad] 2.http_message");}
+  | response_line mime_headers message_body
   ;
 
 message_body
-  : %empty            {printf("HTTP Body Ends\n");}
-  | STRING CRLF
+  : STRING CRLF
+  | message_body STRING CRLF
   ; 
 
 mime_headers
   : PARAM SPACE VALUE CRLF                {$$ = __httpInsertMimeHeader(NULL, $1, $3);} 
   | mime_headers PARAM SPACE VALUE CRLF   {$$ = __httpInsertMimeHeader($1, $2, $4);}
-  | CRLF message_body       {fprintf(stderr, "\n HTTP Body Starts\n");}
   ;
 
 request_line
