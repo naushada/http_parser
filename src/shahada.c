@@ -63,6 +63,73 @@ http_body_t *__httpInsertBody(http_body_t *head, char *body)
  * @param 
  * @return 
  * */
+http_status_t *__httpStatusLine(char *pHttpVersion, 
+                                int statusCode, 
+                                char *pReasonPhrase)
+{
+  http_status_t *__pReq = NULL;
+
+  fprintf(stderr, "pHttpVersion %s statusCode %d pReasonPhrase %s",
+          pHttpVersion, statusCode, pReasonPhrase);
+
+  struct __http_version_t __httpVersionArr[] =
+  {
+    {HTTP1dot0, "HTTP/1.0", 8},
+    {HTTP1dot1, "HTTP/1.1", 8},
+    {HTTP2dot0, "HTTP/2.0", 8}
+  };
+
+  do 
+  {
+    if(!pHttpVersion)
+    {
+      /*Debug log to be added.*/  
+      break;    
+    }
+
+    if(!pReasonPhrase)
+    {
+      /*Debug log to be added.*/  
+      break;    
+    }
+
+    __pReq = (http_status_t *)malloc(sizeof(http_status_t));
+    if(!__pReq)
+    {
+      /*Debug Message to be added.*/  
+      break;
+    }
+
+    memset((void *)__pReq, 0, sizeof(http_status_t));
+
+    /*Translating HTTP Verion*/
+    int idx;
+    for(idx = 0; idx <= HTTP2dot0; idx++)
+    {
+      if(!strncmp(pHttpVersion, __httpVersionArr[idx].pVersionStr, __httpVersionArr[idx].strLen))
+      {
+        __pReq->protocol = __httpVersionArr[idx].httpVersion;
+        break;
+      }
+    }
+
+    free(pHttpVersion);
+    __pReq->status_code = statusCode;
+    __pReq->reasonPhrase = strdup(pReasonPhrase);
+    free(pReasonPhrase);
+
+  }while(0);
+
+  return(__pReq);
+}
+
+/*
+ * @brief:
+ * @param 
+ * @param 
+ * @param 
+ * @return 
+ * */
 http_qs_t *__httpRequestLine(char *pHttpMethod, 
                              char *pUri, 
                              char *pHttpVersion)

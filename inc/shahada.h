@@ -29,8 +29,9 @@ typedef enum
 
 typedef struct
 {
+  http_version_t protocol;
   int status_code;
-  char *status_str;
+  char *reasonPhrase;
 
 }http_status_t;
 
@@ -130,6 +131,10 @@ http_message_t *__httpReqMessage(http_qs_t *reqLine,
 http_message_t *__httpRspMessage(http_status_t *statusLine,
                                  http_headers_t *header,
                                  http_body_t *body);
+
+http_status_t *__httpStatusLine(char *pHttpVersion, 
+                                int statusCode, 
+                                char *pReasonPhrase);
 
 http_headers_t *__httpInsertMimeHeader(http_headers_t *headers, 
                                        char *field, 

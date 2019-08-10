@@ -24,8 +24,8 @@ typedef void *yyscan_t;
   char           *pField;
   char           *pValue;
   char           *str;
-  int            status_code;
   char           *reason_phrase;
+  int            status_code;
 }
 
 /*! tokens are looked in lex file for pattern matching*/
@@ -94,7 +94,7 @@ URI
 
  /*HTTP Response*/
 status_line
-  : HTTP_VERSION SPACE STATUS_CODE SPACE REASON_PHRASE CRLF
+  : HTTP_VERSION SPACE STATUS_CODE SPACE REASON_PHRASE CRLF {$$ = __httpStatusLine($1, $3, $5);}
   ;
 
 %%

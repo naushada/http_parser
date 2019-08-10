@@ -24,6 +24,7 @@ int yywrap(yyscan_t yyscanner)
 %x MIME_PARAM_SCAN MIME_PARAM_VALUE_SCAN 
 %x MESSAGE_BODY_SCAN_START MIME_DELIMITER 
 %x MIME_VALUE_DELIMITER
+%x HTTP_REQ HTTP_RSP
 
 DIGIT                [0-9]
 INTEGER              -?(0|[1-9]{DIGIT}*)
@@ -40,43 +41,67 @@ NOT_COLON            [^:]
 DELIMITER            [:][ ]
  /*Any character except \r*/
 NOT_CR               [^\r]
-BODY_START           (\r\n\r\n\r\n) 
+BODY_START           (\r\n\r\n\r\n|\r\n\r\n) 
 
 
 %%
 
 
 <INITIAL>{METHOD} {
-  yylval->str = strdup(yytext); 
-  return HTTP_METHOD;
+  yylval->str = strdup(yytext);
+  BEGIN (HTTP_REQ);
+  return (HTTP_METHOD);
+}
+ /*FSM For HTTP Request Line*/
+<HTTP_REQ>{SPACE} {
+  return (SPACE);
 }
 
-<INITIAL>{SPACE} {
-  return SPACE;
-}
-
-<INITIAL>"*" {
+<HTTP_REQ>"*" {
   return('*');		
 }
 
-<INITIAL>"/" {
+<HTTP_REQ>"/" {
   yylval->str = strdup(yytext);
   return('/');		
 }
 
-<INITIAL>{PROTOCOL} {
+<HTTP_REQ>{PROTOCOL} {
   yylval->str = strdup(yytext);
   return HTTP_VERSION;
 }
 
-<INITIAL>{DIGIT}{3} {
-  return STATUS_CODE;
+<HTTP_REQ>{CRLF} {
+  BEGIN MIME_PARAM_SCAN;
+  /*! End of line */
+  return CRLF;								
 }
 
-<INITIAL>{CRLF} {
-  printf("MIME Header Starts. \n");
-  BEGIN MIME_PARAM_SCAN;
+ /*FSM for Response Status Line*/
+<INITIAL>{PROTOCOL} {
+  yylval->str = strdup(yytext);
+  BEGIN (HTTP_RSP);
+  return HTTP_VERSION;
+}
 
+<HTTP_RSP>{SPACE} {
+  return (SPACE);
+}
+
+<HTTP_RSP>{DIGIT}+ {
+  yylval->status_code = atoi(yytext);
+  return (STATUS_CODE);
+}
+
+
+ /*Reason-Phrase of Http-Response.*/
+<HTTP_RSP>{NOT_CR}+ {
+  yylval->reason_phrase = strdup(yytext);
+  return (REASON_PHRASE);
+}
+
+<HTTP_RSP>{CRLF} {
+  BEGIN MIME_PARAM_SCAN;
   /*! End of line */
   return CRLF;								
 }
