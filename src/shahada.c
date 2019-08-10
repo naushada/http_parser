@@ -3,17 +3,41 @@
 #include "http_parser.yy.h"
 #include "shahada.h"
 
-extern http_message_t *__PMessage;
-
-http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *headers)
+http_message_t *__httpMessage(http_qs_t *reqLine, 
+                              http_headers_t *headers,
+                              http_body_t *body)
 {
   http_message_t *__httpReq = NULL;
   __httpReq = (http_message_t *)malloc(sizeof(http_message_t));
   memset((void *)__httpReq, 0, sizeof(http_message_t));
 
-  __httpReq->http_req = reqLine;
+  __httpReq->http_req     = reqLine;
   __httpReq->http_headers = headers;
+  __httpReq->http_body    = body;
+
   return(__httpReq);
+}
+
+http_body_t *__httpInsertBody(http_body_t *head, char *body)
+{
+  http_body_t *tmp = NULL;
+  tmp = (http_body_t *)malloc(sizeof(http_body_t));
+  memset((void *)tmp, 0, sizeof(http_body_t));
+
+  tmp->http_body = strdup(body);
+  tmp->body_len = strlen(body);
+  tmp->next = NULL;
+
+  if(!head)
+  {
+    return(tmp);
+  }
+
+  http_body_t *m;
+  for(m = head; m->next; m = m->next) ;
+
+  m->next = tmp;    
+  return(head);
 }
 
 /*
@@ -218,18 +242,16 @@ int __http_process_default_uri(void)
   return(0);		
 }
 
-int __http_parser_ex(char *pIn) 
+http_message_t *__http_parser_ex(char *pIn) 
 {
   yyscan_t yyscanner;
-  unsigned char *str = NULL;
+  extern http_message_t *__PMessage;
 
   if(yylex_init(&yyscanner))
   {
     fprintf(stderr, "%s:%d initialization to scanner failed\n", __FILE__, __LINE__);
-    return((unsigned char *)0);
+    return((http_message_t *)0);
   }
-
-  __PMessage = http_init();
 
   YY_BUFFER_STATE buff = pIn ? yy_scan_string(pIn, yyscanner) : 0;
 
@@ -237,13 +259,13 @@ int __http_parser_ex(char *pIn)
   if(yyparse(yyscanner))
   {
     fprintf(stderr, "%s:%d yyparse failed\n", __FILE__, __LINE__);
-    return((unsigned char *)0);    
+    return((http_message_t *)0);    
   }
 
   yy_delete_buffer(buff, yyscanner);
   yylex_destroy(yyscanner);
 
-  return(str);
+  return(__PMessage);
 
 }
 

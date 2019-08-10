@@ -31,12 +31,11 @@ typedef void *yyscan_t;
 %token <pValue>  VALUE
 %token <int> STATUS_CODE
 
-%type <request_line> request_URI 
+%type <str> request_URI 
 %type <http_headers> mime_headers 
 %type <message> http_message
 %type <str> URI
 %type <request_line> request_line 
-%type <str> response_line 
 %type <http_body> message_body 
 
 %define parse.error verbose
@@ -55,30 +54,23 @@ input
   ;
 
 http_message
-  : request_line                             {}
-  | request_line mime_headers                {$$ = __httpMessage($1, $2);}
-  | request_line mime_headers message_body   {$$ = __httpMessage($1, $2);}
-  | response_line
-  | response_line mime_headers
-  | response_line mime_headers message_body
+  : request_line                             {$$ = __httpMessage($1, NULL, NULL);}
+  | request_line mime_headers                {$$ = __httpMessage($1, $2, NULL);}
+  | request_line mime_headers message_body   {$$ = __httpMessage($1, $2, $3);}
   ;
 
 message_body
-  : lSTRING CRLF
-  | message_body lSTRING CRLF
+  : lSTRING CRLF                             {$$ = __httpInsertBody(NULL, $1);}
+  | message_body lSTRING CRLF                {$$ = __httpInsertBody($1, $2);}
   ; 
 
 mime_headers
-  : PARAM SPACE VALUE CRLF                {$$ = __httpInsertMimeHeader(NULL, $1, $3);} 
-  | mime_headers PARAM SPACE VALUE CRLF   {$$ = __httpInsertMimeHeader($1, $2, $4);}
+  : PARAM SPACE VALUE CRLF                   {$$ = __httpInsertMimeHeader(NULL, $1, $3);} 
+  | mime_headers PARAM SPACE VALUE CRLF      {$$ = __httpInsertMimeHeader($1, $2, $4);}
   ;
 
 request_line
   : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);free($1);free($3);free($5);}
-  ;
-
-response_line
-  : HTTP_VERSION SPACE STATUS_CODE SPACE lSTRING CRLF
   ;
 
 request_URI

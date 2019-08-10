@@ -80,8 +80,8 @@ struct http_qs
 
 struct http_body
 {
-  unsigned int  body_len;								
-  unsigned char *http_body;
+  int  body_len;								
+  char *http_body;
   struct http_body *next;		
 };
 
@@ -106,7 +106,7 @@ int __http_process_qs(unsigned char *pResource, unsigned char *pQs);
 int __http_process_default_uri(void);
 int __http_process_options(void);
 
-int __http_parser_ex(char *pIn);
+http_message_t *__http_parser_ex(char *pIn);
 
 http_message_t *http_init(void);
 
@@ -120,9 +120,11 @@ http_header_t *__httpNewMimeHeader(char *pMimeFieldName,
 void __httpDisplayMimeHeader(http_message_t *pHttpMessage);
 
 http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newNode);
-http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *header);
+http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *header, http_body_t *body);
 http_headers_t *__httpInsertMimeHeader(http_headers_t *headers, 
                                        char *field, 
                                        char *value);
+
+http_body_t *__httpInsertBody(http_body_t *head, char *body);
 
 #endif /*__HTTP_H__*/
