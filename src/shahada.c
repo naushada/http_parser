@@ -3,7 +3,23 @@
 #include "http_parser.yy.h"
 #include "shahada.h"
 
-http_message_t *__httpMessage(http_qs_t *reqLine, 
+http_message_t *__httpRspMessage(http_status_t *statusLine, 
+                                 http_headers_t *headers,
+                                 http_body_t *body)
+{
+      
+  http_message_t *__httpReq = NULL;
+  __httpReq = (http_message_t *)malloc(sizeof(http_message_t));
+  memset((void *)__httpReq, 0, sizeof(http_message_t));
+
+  __httpReq->status_line   = statusLine;
+  __httpReq->http_headers  = headers;
+  __httpReq->http_body     = body;
+
+  return(__httpReq);
+}
+
+http_message_t *__httpReqMessage(http_qs_t *reqLine, 
                               http_headers_t *headers,
                               http_body_t *body)
 {

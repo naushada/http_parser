@@ -18,24 +18,29 @@ typedef void *yyscan_t;
 %union {
   http_message_t *message;
   http_qs_t      *request_line;
+  http_status_t  *status_line;
   http_headers_t *http_headers;
   http_body_t    *http_body;
   char           *pField;
   char           *pValue;
   char           *str;
+  int            status_code;
+  char           *reason_phrase;
 }
 
 /*! tokens are looked in lex file for pattern matching*/
 %token <str> lSTRING HTTP_METHOD HTTP_VERSION QS RESOURCE CRLF SPACE
 %token <pField>  PARAM
 %token <pValue>  VALUE
-%token <int> STATUS_CODE
+%token <status_code> STATUS_CODE
+%token <reason_phrase> REASON_PHRASE
 
 %type <str> request_URI 
 %type <http_headers> mime_headers 
 %type <message> http_message
 %type <str> URI
 %type <request_line> request_line 
+%type <status_line> status_line 
 %type <http_body> message_body 
 
 %define parse.error verbose
@@ -45,18 +50,22 @@ typedef void *yyscan_t;
 %param {yyscan_t yyscanner}
 
 /*! Starting point of the Grammar*/
-%start input
+%start generic_message 
 
 %%
 
-input
+generic_message
   : http_message  {__PMessage = $1;__httpDisplayMimeHeader($1);}
   ;
 
 http_message
-  : request_line                             {$$ = __httpMessage($1, NULL, NULL);}
-  | request_line mime_headers                {$$ = __httpMessage($1, $2, NULL);}
-  | request_line mime_headers message_body   {$$ = __httpMessage($1, $2, $3);}
+  : request_line                             {$$ = __httpReqMessage($1, NULL, NULL);}
+  | request_line mime_headers                {$$ = __httpReqMessage($1, $2, NULL);}
+  | request_line mime_headers message_body   {$$ = __httpReqMessage($1, $2, $3);}
+  /*Grammar for HTTP Response.*/
+  | status_line                              {$$ = __httpRspMessage($1, NULL, NULL);}
+  | status_line mime_headers                 {$$ = __httpRspMessage($1, $2, NULL);}
+  | status_line mime_headers message_body    {$$ = __httpRspMessage($1, $2, $3);}
   ;
 
 message_body
@@ -81,6 +90,11 @@ request_URI
 
 URI
   : RESOURCE '?' QS { __http_process_qs($1, $3);}
+  ;
+
+ /*HTTP Response*/
+status_line
+  : HTTP_VERSION SPACE STATUS_CODE SPACE REASON_PHRASE CRLF
   ;
 
 %%

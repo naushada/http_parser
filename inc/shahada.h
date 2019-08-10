@@ -29,8 +29,8 @@ typedef enum
 
 typedef struct
 {
-  unsigned int status_code;
-  unsigned char *status_str;
+  int status_code;
+  char *status_str;
 
 }http_status_t;
 
@@ -92,6 +92,7 @@ typedef struct http_body http_body_t;
 struct http_req
 {
   http_qs_t      *http_req;
+  http_status_t  *status_line;
   http_headers_t *http_headers;
   http_body_t    *http_body;
 
@@ -119,8 +120,17 @@ http_header_t *__httpNewMimeHeader(char *pMimeFieldName,
 
 void __httpDisplayMimeHeader(http_message_t *pHttpMessage);
 
-http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newNode);
-http_message_t *__httpMessage(http_qs_t *reqLine, http_headers_t *header, http_body_t *body);
+http_headers_t *__httpAddMimeHeader(http_headers_t *headers, 
+                                    http_header_t *newNode);
+
+http_message_t *__httpReqMessage(http_qs_t *reqLine, 
+                                 http_headers_t *header, 
+                                 http_body_t *body);
+
+http_message_t *__httpRspMessage(http_status_t *statusLine,
+                                 http_headers_t *header,
+                                 http_body_t *body);
+
 http_headers_t *__httpInsertMimeHeader(http_headers_t *headers, 
                                        char *field, 
                                        char *value);
