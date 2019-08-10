@@ -33,7 +33,7 @@ ALPHA                [a-zA-Z]
 ALPHANUM             [a-zA-Z0-9]
 HEX                  [0-9a-fA-F]
 CRLF                 (\r\n)
-SPACE                [ ]
+SPACE                [ \t]
 PROTOCOL             (HTTP)\/{DIGIT}\.{DIGIT} 
 METHOD               (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
  /*Any Character except : which is the delimeter of FIELD*/
@@ -46,12 +46,13 @@ BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
 
 %%
 
-
+ /*Initial state of LEX*/
 <INITIAL>{METHOD} {
   yylval->str = strdup(yytext);
   BEGIN (HTTP_REQ);
   return (HTTP_METHOD);
 }
+
  /*FSM For HTTP Request Line*/
 <HTTP_REQ>{SPACE} {
   return (SPACE);
@@ -93,13 +94,13 @@ BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
   return (STATUS_CODE);
 }
 
-
  /*Reason-Phrase of Http-Response.*/
 <HTTP_RSP>{NOT_CR}+ {
   yylval->reason_phrase = strdup(yytext);
   return (REASON_PHRASE);
 }
 
+ /*End of Status Line.*/
 <HTTP_RSP>{CRLF} {
   BEGIN MIME_PARAM_SCAN;
   /*! End of line */

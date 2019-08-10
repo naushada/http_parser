@@ -232,7 +232,6 @@ http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newN
 
   if(!headers) 
   {
-    fprintf(stderr, "\n(headers is NULL - Returning First Header field %s value %s\n", tmp->header->field, tmp->header->value);  
     return tmp;
   }
 
@@ -261,7 +260,6 @@ http_header_t *__httpNewMimeHeader(char *pMimeFieldName,
     memset((void *)fNode, 0, sizeof(http_header_t));
     fNode->field = strdup(pMimeFieldName);
     fNode->value = strdup(pMimeFieldValue);
-    fprintf(stderr, "\nfield %s value %s\n", fNode->field, fNode->value);
     free(pMimeFieldName);
     free(pMimeFieldValue);
     break;
