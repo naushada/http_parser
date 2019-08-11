@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include "http_parser.tab.h"
 #include "http_parser.yy.h"
 #include "shahada.h"
@@ -8,23 +9,29 @@ http_message_t *__httpRspMessage(http_status_t *statusLine,
                                  http_body_t *body)
 {
       
-  http_message_t *__httpReq = NULL;
-  __httpReq = (http_message_t *)malloc(sizeof(http_message_t));
-  memset((void *)__httpReq, 0, sizeof(http_message_t));
+  http_message_t *__httpRsp = NULL;
+  __httpRsp = (http_message_t *)malloc(sizeof(http_message_t));
+  assert(__httpRsp != NULL);
 
-  __httpReq->status_line   = statusLine;
-  __httpReq->http_headers  = headers;
-  __httpReq->http_body     = body;
+  memset((void *)__httpRsp, 0, sizeof(http_message_t));
 
-  return(__httpReq);
+  __httpRsp->status_line   = statusLine;
+  __httpRsp->http_headers  = headers;
+  __httpRsp->http_body     = body;
+
+  return(__httpRsp);
 }
 
 http_message_t *__httpReqMessage(http_qs_t *reqLine, 
-                              http_headers_t *headers,
-                              http_body_t *body)
+                                 http_headers_t *headers,
+                                 http_body_t *body)
 {
   http_message_t *__httpReq = NULL;
   __httpReq = (http_message_t *)malloc(sizeof(http_message_t));
+
+  /*assert when __httpReq ins equal to NULL.*/
+  assert(__httpReq != NULL);
+
   memset((void *)__httpReq, 0, sizeof(http_message_t));
 
   __httpReq->http_req     = reqLine;
@@ -38,8 +45,10 @@ http_body_t *__httpInsertBody(http_body_t *head, char *body)
 {
   http_body_t *tmp = NULL;
   tmp = (http_body_t *)malloc(sizeof(http_body_t));
-  memset((void *)tmp, 0, sizeof(http_body_t));
+  /*assert when tmp is equal to NULL.*/
+  assert(tmp != NULL);
 
+  memset((void *)tmp, 0, sizeof(http_body_t));
   tmp->http_body = strdup(body);
   tmp->body_len = strlen(body);
   tmp->next = NULL;
@@ -94,11 +103,7 @@ http_status_t *__httpStatusLine(char *pHttpVersion,
     }
 
     __pReq = (http_status_t *)malloc(sizeof(http_status_t));
-    if(!__pReq)
-    {
-      /*Debug Message to be added.*/  
-      break;
-    }
+    assert(__pReq != NULL); 
 
     memset((void *)__pReq, 0, sizeof(http_status_t));
 
@@ -179,14 +184,10 @@ http_qs_t *__httpRequestLine(char *pHttpMethod,
     }
 
     __pReq = (http_qs_t *)malloc(sizeof(http_qs_t));
-    if(!__pReq)
-    {
-      /*Debug Message to be added.*/  
-      break;
-    }
+    /*assert when __pReq is equal to NULL.*/
+    assert(__pReq != NULL); 
 
     memset((void *)__pReq, 0, sizeof(http_qs_t));
-   
     /*Translating HTTP Method.*/
     int idx = 0;
     for(idx = 0; idx <= CONNECT; idx++)
@@ -225,6 +226,8 @@ http_headers_t *__httpInsertMimeHeader(http_headers_t *headers, char *field, cha
 http_headers_t *__httpAddMimeHeader(http_headers_t *headers, http_header_t *newNode)
 {
   http_headers_t *tmp = (http_headers_t*)malloc(sizeof(http_headers_t));
+  assert(tmp != NULL);
+
   memset((void *)tmp, 0, sizeof(http_headers_t));
 
   tmp->header = newNode;
@@ -250,12 +253,7 @@ http_header_t *__httpNewMimeHeader(char *pMimeFieldName,
   do 
   {
     fNode = (http_header_t*)malloc(sizeof(http_header_t));
-    
-    if(!fNode)
-    {
-      /*Add the debug log*/
-      break;  
-    }
+    assert(fNode != NULL); 
 
     memset((void *)fNode, 0, sizeof(http_header_t));
     fNode->field = strdup(pMimeFieldName);
@@ -347,7 +345,6 @@ http_message_t *__http_parser_ex(char *pIn)
   yylex_destroy(yyscanner);
 
   return(__PMessage);
-
 }
 
 int __http_process_options(void)
@@ -356,6 +353,100 @@ int __http_process_options(void)
 	return 0;
 }
 
+char *shahadaGetFieldValue(char *field_name, http_message_t *msg)
+{
+  http_headers_t *head = msg ? msg->http_headers: NULL; 
+  char *fieldValue = NULL;
 
+  do 
+  {    
+    if(!head)
+    {
+      fprintf(stderr, "Pointer to http_message_t is NULL");
+      break;
+    }
+
+    while(head)
+    {
+      if(!strncmp(field_name, head->header->field, strlen(field_name)))
+      {
+        fieldValue = strdup(head->header->value);
+        break;
+      }
+      head = head->next;
+    }
+
+  }while(0);
+
+  return(fieldValue);
+}
+
+int shahadaGetMethod(http_message_t *pMsg)
+{
+  http_qs_t *head = pMsg ? pMsg->http_req: NULL;
+  return(head ? (int)head->method :-1);
+}
+
+int shahadaGetProtocol(http_message_t *pMsg)
+{
+  http_qs_t *head = pMsg ? pMsg->http_req: NULL;
+  return(head ? (int)head->version :-1);
+}
+
+char *shahadaGetUri(http_message_t *pMsg)
+{
+  char *pUri = NULL;
+  http_qs_t *head = pMsg ? pMsg->http_req: NULL;
+  assert(head != NULL);
+
+  pUri = strdup(head->resource_name);
+  return(pUri);
+}
+
+char *shahadaGetQsParamValue(char *qsParamName, http_message_t *pMsg)
+{
+  char *pQsParam = NULL;
+  qs_param_t *head = pMsg ? pMsg->http_req->qs_param: NULL;
+ 
+  assert(qsParamName != NULL);
+
+  if(!head)
+  {
+     return(pQsParam);    
+  }
+
+  while(head)
+  {
+    if(!strncmp(qsParamName, head->name, strlen(qsParamName)))
+    {
+      pQsParam = strdup(head->value);
+      break;
+    }
+
+    head = head->next;
+  }
+
+  return(pQsParam);
+}
+
+int shahadaGetStatusCode(http_message_t *pMsg)
+{
+  http_status_t *head = pMsg ? pMsg->status_line: NULL;
+  return(head ? (int)head->status_code :-1);
+}
+
+char *shahadaGetReasonPhrase(http_message_t *pMsg)
+{
+  char *pReasonPhrase = NULL;
+  http_status_t *head = pMsg ? pMsg->status_line: NULL;
+  
+  if(!head)
+  {
+     return(pReasonPhrase);    
+  }
+
+  pReasonPhrase = strdup(head->reasonPhrase);
+  return(pReasonPhrase);
+}
 
 

@@ -49,13 +49,13 @@ BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
  /*Initial state of LEX*/
 <INITIAL>{METHOD} {
   yylval->str = strdup(yytext);
-  BEGIN (HTTP_REQ);
-  return (HTTP_METHOD);
+  BEGIN(HTTP_REQ);
+  return(HTTP_METHOD);
 }
 
  /*FSM For HTTP Request Line*/
 <HTTP_REQ>{SPACE} {
-  return (SPACE);
+  return(SPACE);
 }
 
 <HTTP_REQ>"*" {
@@ -81,15 +81,16 @@ BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
  /*FSM for Response Status Line*/
 <INITIAL>{PROTOCOL} {
   yylval->str = strdup(yytext);
-  BEGIN (HTTP_RSP);
-  return HTTP_VERSION;
+  BEGIN(HTTP_RSP);
+  fprintf(stderr, "\nMoving to HTTP_RSP value %s len %d\n", yytext,yyleng);
+  return(HTTP_VERSION);
 }
 
 <HTTP_RSP>{SPACE} {
-  return (SPACE);
+  return(SPACE);
 }
 
-<HTTP_RSP>{DIGIT}+ {
+<HTTP_RSP>{DIGIT}{3} {
   yylval->status_code = atoi(yytext);
   return (STATUS_CODE);
 }
@@ -97,6 +98,7 @@ BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
  /*Reason-Phrase of Http-Response.*/
 <HTTP_RSP>{NOT_CR}+ {
   yylval->reason_phrase = strdup(yytext);
+  fprintf(stderr, "stderr, The value of Reason Phrase is %s\n", yytext);
   return (REASON_PHRASE);
 }
 

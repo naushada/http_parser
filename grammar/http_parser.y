@@ -92,7 +92,6 @@ URI
   : RESOURCE '?' QS { __http_process_qs($1, $3);}
   ;
 
- /*HTTP Response*/
 status_line
   : HTTP_VERSION SPACE STATUS_CODE SPACE REASON_PHRASE CRLF {$$ = __httpStatusLine($1, $3, $5);}
   ;

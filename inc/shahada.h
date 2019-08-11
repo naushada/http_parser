@@ -63,8 +63,8 @@ struct http_headers
 
 struct qs_param
 {
-  unsigned char *name;
-  unsigned char *value;
+  char *name;
+  char *value;
   struct qs_param *next;
 };
 
@@ -75,7 +75,7 @@ struct http_qs
   http_method_t method;
   http_version_t version;
   char resource_name[__HTTP_MAX_URI_SIZE];
-  qs_param_t qs_param;
+  qs_param_t *qs_param;
   
 };
 
@@ -141,5 +141,16 @@ http_headers_t *__httpInsertMimeHeader(http_headers_t *headers,
                                        char *value);
 
 http_body_t *__httpInsertBody(http_body_t *head, char *body);
+
+char *shahadaGetFieldValue(char *field_name, http_message_t *msg);
+char *shahadaGetUri(http_message_t *pMsg);
+char *shahadaGetQsParamValue(char *qsParamName, http_message_t *pMsg);
+char *shahadaGetReasonPhrase(http_message_t *pMsg);
+
+int shahadaGetStatusCode(http_message_t *pMsg);
+int shahadaGetMethod(http_message_t *pMsg);
+int shahadaGetProtocol(http_message_t *pMsg);
+
+
 
 #endif /*__HTTP_H__*/
