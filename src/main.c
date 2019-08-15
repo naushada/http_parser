@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "shahada.h"
 
 
@@ -6,7 +7,7 @@ int yydebug = 1;
 int main(int argc, char **argv) {
     void *pMsg = NULL;
   /*! Read input from File now.*/
-  char buff[2048] = "GET / HTTP/1.1\r\n"
+  char buff[2048] = "GET /asc.html HTTP/1.1\r\n"
                     "Host: 10.10.10.1\r\n"
                     "Content-Length: 101\r\n"
                     "Content-Type: json; txt/5.0\r\n"
@@ -34,4 +35,5 @@ int main(int argc, char **argv) {
   fprintf(stderr, "protocol is %d\n", shahadaGetProtocol(pMsg));
   fprintf(stderr, "method is %d\n", shahadaGetMethod(pMsg));
   free(fValue);
+  return(0);
 }

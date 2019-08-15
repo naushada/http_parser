@@ -37,7 +37,8 @@ typedef void *yyscan_t;
 %token <status_code> STATUS_CODE
 %token <reason_phrase> REASON_PHRASE
 
-%type <qs_param> QS 
+%type <qs_param> qs 
+%type <qs> qstring 
 %type <http_headers> mime_headers 
 %type <message> http_message
 %type <request_line> request_line 
@@ -80,14 +81,17 @@ mime_headers
   ;
 
 request_line
-  : HTTP_METHOD SPACE QS SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);free($1);free($5);}
+  : HTTP_METHOD SPACE qs SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);free($1);free($5);}
   ;
 
-QS
-  : RESOURCE             {$$ = __http_process_qs($1, NULL);}
-  | RESOURCE '?' QS      {$$ = __http_process_qs($1, $3);}
-  | PARAM EQ VALUE       {$$ = __httpInsertQsParam(NULL, $1, $3);}
-  | QS PARAM EQ VALUE    {$$ = __httpInsertQsParam($1, $2, $4);}
+qs
+  : RESOURCE                  {$$ = __http_process_qs($1, NULL);}
+  | RESOURCE '?' qstring      {$$ = __http_process_qs($1, $3);}
+  ;
+
+qstring
+  : PARAM EQ VALUE            {$$ = __httpInsertQsParam(NULL, $1, $3);}
+  | qstring PARAM EQ VALUE    {$$ = __httpInsertQsParam($1, $2, $4);}
   ;
 
 status_line

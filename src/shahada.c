@@ -38,6 +38,8 @@ http_message_t *__httpReqMessage(http_qs_t *reqLine,
   __httpReq->http_headers = headers;
   __httpReq->http_body    = body;
 
+  fprintf(stderr, "%s:%d res_name is %s\n",__FILE__, __LINE__, __httpReq->http_req->qs_param->resource_name);
+
   return(__httpReq);
 }
 
@@ -292,7 +294,6 @@ qs_param_ttt *__http_process_qs(char *pResource, qs_param_t *pQs)
   fprintf(stderr, "[%s:%d] resource %s \n", 
 					 __func__, __LINE__, pResource);
 
-  qs_param_t *head = NULL;
   qs_param_ttt *qs_param = (qs_param_ttt *)malloc(sizeof(qs_param_ttt));
   /*Continue as long as qs_param is not NULL.*/
   assert(qs_param != NULL);
@@ -303,32 +304,53 @@ qs_param_ttt *__http_process_qs(char *pResource, qs_param_t *pQs)
     {
       /*Only resource name is present.*/ 
       qs_param->resource_name = strdup(pResource);
-      qs_param->qsParam = pQs;
+      qs_param->qsParam = NULL;
       fprintf(stderr, "%s:%d resource_name %s", __FILE__, __LINE__,qs_param->resource_name);
       free(pResource);
       break;
     }
 
-    if(!qs_param->qsParam)
-    {
-      qs_param->qsParam = pQs;
-      break;
-    }
-
-    /*Insert QS at the End.*/
-    for(head = qs_param->qsParam ;head->next; head = head->next) ;
-
-    head->next = pQs;
+    qs_param->resource_name = strdup(pResource);
+    qs_param->qsParam = pQs;
+    free(pResource);
 
   }while(0);
 
   return(qs_param);		
 }
 
-qs_param_ttt *__httpInsertQsParam(qs_param_ttt *qsParam, 
-                                  char *param, 
-                                  char *value)
+qs_param_t *__httpInsertQsParam(qs_param_t *qsParam, 
+                                char *param, 
+                                char *value)
 {
+  qs_param_t *tmpNode = NULL;
+  tmpNode = (qs_param_t *)malloc(sizeof(qs_param_t));
+  assert(tmpNode != NULL);
+  memset((void *)tmpNode, 0, sizeof(qs_param_t));
+
+  tmpNode->name = strdup(param);
+  tmpNode->value = strdup(value);
+  free(param);
+  free(value);
+
+  do 
+  {
+    if(!qsParam)
+    {
+      qsParam = tmpNode;
+      qsParam->next = NULL;
+      break;
+    }
+
+    qs_param_t *head = qsParam;
+    for(; head->next; head = head->next) ;
+
+    head->next = tmpNode;
+    break;
+
+  }while(0);
+
+  return(qsParam);
 }
 
 http_message_t *http_init(void)

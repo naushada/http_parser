@@ -148,9 +148,9 @@ http_headers_t *__httpInsertMimeHeader(http_headers_t *headers,
 
 http_body_t *__httpInsertBody(http_body_t *head, char *body);
 
-qs_param_ttt *__httpInsertQsParam(qs_param_ttt *qsParam, 
-                                  char *param, 
-                                  char *value);
+qs_param_t *__httpInsertQsParam(qs_param_t *qsParam, 
+                                char *param, 
+                                char *value);
 
 char *shahadaGetFieldValue(char *field_name, void *msg);
 char *shahadaGetUri(void *pMsg);

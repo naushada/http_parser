@@ -30,7 +30,7 @@ DIGIT                [0-9]
 INTEGER              -?(0|[1-9]{DIGIT}*)
 NUMBER               {INTEGER}\.{DIGIT}+
 ALPHA                [a-zA-Z]
-ALPHANUM             [a-zA-Z0-9_-]
+ALPHANUM             [a-zA-Z0-9_-\.]
 HEX                  [0-9a-fA-F]
 CRLF                 (\r\n)
 SPACE                [ \t]
