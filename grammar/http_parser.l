@@ -30,10 +30,11 @@ DIGIT                [0-9]
 INTEGER              -?(0|[1-9]{DIGIT}*)
 NUMBER               {INTEGER}\.{DIGIT}+
 ALPHA                [a-zA-Z]
-ALPHANUM             [a-zA-Z0-9]
+ALPHANUM             [a-zA-Z0-9_-]
 HEX                  [0-9a-fA-F]
 CRLF                 (\r\n)
 SPACE                [ \t]
+EQ                   (=)
 PROTOCOL             (HTTP)\/{DIGIT}\.{DIGIT} 
 METHOD               (OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)
  /*Any Character except : which is the delimeter of FIELD*/
@@ -41,7 +42,10 @@ NOT_COLON            [^:]
 DELIMITER            [:][ ]
  /*Any character except \r*/
 NOT_CR               [^\r]
-BODY_START           (\r\n\r\n\r\n|\r\n\r\n) 
+BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
+URI                  ((\*)|(\/[ALPHANUM]*))
+QS_PARAM             [^=]
+QS_VALUE             ([^&]|[^ ])
 
 
 %%
@@ -58,13 +62,9 @@ BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
   return(SPACE);
 }
 
-<HTTP_REQ>"*" {
-  return('*');		
-}
-
-<HTTP_REQ>"/" {
+<HTTP_REQ>{URI}+ {
   yylval->str = strdup(yytext);
-  return('/');		
+  return(RESOURCE);		
 }
 
 <HTTP_REQ>{PROTOCOL} {

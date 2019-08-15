@@ -136,13 +136,13 @@ http_status_t *__httpStatusLine(char *pHttpVersion,
  * @return 
  * */
 http_qs_t *__httpRequestLine(char *pHttpMethod, 
-                             char *pUri, 
+                             qs_param_ttt *pUri, 
                              char *pHttpVersion)
 {
   http_qs_t *__pReq = NULL;
 
   fprintf(stderr, "pHttpMethod %s pUri %s pHttpVersion %s",
-          pHttpMethod, pUri, pHttpVersion);
+          pHttpMethod, pUri->resource_name, pHttpVersion);
 
   struct __http_method_t __httpMethodArr[] = 
   {
@@ -209,9 +209,9 @@ http_qs_t *__httpRequestLine(char *pHttpMethod,
       }
     }
 
-    /*Copying URI*/
-    memset((void *)__pReq->resource_name, 0, sizeof(__pReq->resource_name));
-    strncpy(__pReq->resource_name, pUri, strlen(pUri));
+    __pReq->qs_param = pUri;
+    fprintf(stderr, "\nResource Name is %s\n", __pReq->qs_param->resource_name);
+    free(pUri);
 
   }while(0);
 
@@ -287,18 +287,48 @@ void __httpDisplayMimeHeader(http_message_t *pHttpMessage)
   }while(0);
 }
 
-int __http_process_request(unsigned char *HTTP_method, unsigned char *HTTP_version)
+qs_param_ttt *__http_process_qs(char *pResource, qs_param_t *pQs)
 {
-  fprintf(stderr, "[%s:%d Value of method %s Version %s\n", 
-                  __func__, __LINE__,HTTP_method, HTTP_version);
-  return(0);		
+  fprintf(stderr, "[%s:%d] resource %s \n", 
+					 __func__, __LINE__, pResource);
+
+  qs_param_t *head = NULL;
+  qs_param_ttt *qs_param = (qs_param_ttt *)malloc(sizeof(qs_param_ttt));
+  /*Continue as long as qs_param is not NULL.*/
+  assert(qs_param != NULL);
+
+  do 
+  {
+    if(!pQs)
+    {
+      /*Only resource name is present.*/ 
+      qs_param->resource_name = strdup(pResource);
+      qs_param->qsParam = pQs;
+      fprintf(stderr, "%s:%d resource_name %s", __FILE__, __LINE__,qs_param->resource_name);
+      free(pResource);
+      break;
+    }
+
+    if(!qs_param->qsParam)
+    {
+      qs_param->qsParam = pQs;
+      break;
+    }
+
+    /*Insert QS at the End.*/
+    for(head = qs_param->qsParam ;head->next; head = head->next) ;
+
+    head->next = pQs;
+
+  }while(0);
+
+  return(qs_param);		
 }
 
-int __http_process_qs(unsigned char *pResource, unsigned char *pQs)
+qs_param_ttt *__httpInsertQsParam(qs_param_ttt *qsParam, 
+                                  char *param, 
+                                  char *value)
 {
-  fprintf(stderr, "[%s:%d] resource %s qs %s\n", 
-					 __func__, __LINE__, pResource, pQs);
-  return(0);		
 }
 
 http_message_t *http_init(void)
@@ -321,7 +351,7 @@ int __http_process_default_uri(void)
   return(0);		
 }
 
-http_message_t *__http_parser_ex(char *pIn) 
+void *__http_parser_ex(char *pIn) 
 {
   yyscan_t yyscanner;
   extern http_message_t *__PMessage;
@@ -329,7 +359,7 @@ http_message_t *__http_parser_ex(char *pIn)
   if(yylex_init(&yyscanner))
   {
     fprintf(stderr, "%s:%d initialization to scanner failed\n", __FILE__, __LINE__);
-    return((http_message_t *)0);
+    return((void *)0);
   }
 
   YY_BUFFER_STATE buff = pIn ? yy_scan_string(pIn, yyscanner) : 0;
@@ -338,13 +368,13 @@ http_message_t *__http_parser_ex(char *pIn)
   if(yyparse(yyscanner))
   {
     fprintf(stderr, "%s:%d yyparse failed\n", __FILE__, __LINE__);
-    return((http_message_t *)0);    
+    return((void *)0);    
   }
 
   yy_delete_buffer(buff, yyscanner);
   yylex_destroy(yyscanner);
 
-  return(__PMessage);
+  return((void *)__PMessage);
 }
 
 int __http_process_options(void)
@@ -353,8 +383,14 @@ int __http_process_options(void)
 	return 0;
 }
 
-char *shahadaGetFieldValue(char *field_name, http_message_t *msg)
+/*********************************************************
+ *
+ * Exposed API for application.
+ *
+ ********************************************************/
+char *shahadaGetFieldValue(char *field_name, void *pMsg)
 {
+  http_message_t *msg = (http_message_t *)pMsg;  
   http_headers_t *head = msg ? msg->http_headers: NULL; 
   char *fieldValue = NULL;
 
@@ -381,32 +417,37 @@ char *shahadaGetFieldValue(char *field_name, http_message_t *msg)
   return(fieldValue);
 }
 
-int shahadaGetMethod(http_message_t *pMsg)
+int shahadaGetMethod(void *msg)
 {
+  http_message_t *pMsg = (http_message_t *)msg;  
   http_qs_t *head = pMsg ? pMsg->http_req: NULL;
   return(head ? (int)head->method :-1);
 }
 
-int shahadaGetProtocol(http_message_t *pMsg)
+int shahadaGetProtocol(void *msg)
 {
+  http_message_t *pMsg = (http_message_t *)msg;  
   http_qs_t *head = pMsg ? pMsg->http_req: NULL;
   return(head ? (int)head->version :-1);
 }
 
-char *shahadaGetUri(http_message_t *pMsg)
+char *shahadaGetUri(void *msg)
 {
+  http_message_t *pMsg = (http_message_t *)msg;  
   char *pUri = NULL;
   http_qs_t *head = pMsg ? pMsg->http_req: NULL;
   assert(head != NULL);
 
-  pUri = strdup(head->resource_name);
+  pUri = strdup(head->qs_param->resource_name);
+  fprintf(stderr, "%s:%d Uri is %s\n", __FILE__, __LINE__, head->qs_param->resource_name);
   return(pUri);
 }
 
-char *shahadaGetQsParamValue(char *qsParamName, http_message_t *pMsg)
+char *shahadaGetQsParamValue(char *qsParamName, void *msg)
 {
+  http_message_t *pMsg = (http_message_t *)msg;  
   char *pQsParam = NULL;
-  qs_param_t *head = pMsg ? pMsg->http_req->qs_param: NULL;
+  qs_param_t *head = pMsg ? pMsg->http_req->qs_param->qsParam: NULL;
  
   assert(qsParamName != NULL);
 
@@ -429,14 +470,16 @@ char *shahadaGetQsParamValue(char *qsParamName, http_message_t *pMsg)
   return(pQsParam);
 }
 
-int shahadaGetStatusCode(http_message_t *pMsg)
+int shahadaGetStatusCode(void *msg)
 {
+  http_message_t *pMsg = (http_message_t *)msg;  
   http_status_t *head = pMsg ? pMsg->status_line: NULL;
-  return(head ? (int)head->status_code :-1);
+  return(head ? (int)head->status_code : -1);
 }
 
-char *shahadaGetReasonPhrase(http_message_t *pMsg)
+char *shahadaGetReasonPhrase(void *msg)
 {
+  http_message_t *pMsg = (http_message_t *)msg;  
   char *pReasonPhrase = NULL;
   http_status_t *head = pMsg ? pMsg->status_line: NULL;
   

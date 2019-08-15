@@ -4,7 +4,7 @@
 
 int yydebug = 1;
 int main(int argc, char **argv) {
-    http_message_t *pMsg = NULL;
+    void *pMsg = NULL;
   /*! Read input from File now.*/
   char buff[2048] = "GET / HTTP/1.1\r\n"
                     "Host: 10.10.10.1\r\n"
@@ -29,6 +29,9 @@ int main(int argc, char **argv) {
 
   pMsg = __http_parser_ex(buff);
   char *fValue = shahadaGetFieldValue("Content-Length", pMsg);
-  fprintf(stderr, "Value of Field is %s", fValue);
+  fprintf(stderr, "Value of Field is %s\n", fValue);
+  fprintf(stderr, "resource is %s\n", shahadaGetUri(pMsg));
+  fprintf(stderr, "protocol is %d\n", shahadaGetProtocol(pMsg));
+  fprintf(stderr, "method is %d\n", shahadaGetMethod(pMsg));
   free(fValue);
 }

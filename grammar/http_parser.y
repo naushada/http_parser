@@ -21,6 +21,8 @@ typedef void *yyscan_t;
   http_status_t  *status_line;
   http_headers_t *http_headers;
   http_body_t    *http_body;
+  qs_param_ttt   *qs_param;
+  qs_param_t     *qs;
   char           *pField;
   char           *pValue;
   char           *str;
@@ -29,16 +31,15 @@ typedef void *yyscan_t;
 }
 
 /*! tokens are looked in lex file for pattern matching*/
-%token <str> lSTRING HTTP_METHOD HTTP_VERSION QS RESOURCE CRLF SPACE
+%token <str> lSTRING HTTP_METHOD HTTP_VERSION EQ RESOURCE CRLF SPACE
 %token <pField>  PARAM
 %token <pValue>  VALUE
 %token <status_code> STATUS_CODE
 %token <reason_phrase> REASON_PHRASE
 
-%type <str> request_URI 
+%type <qs_param> QS 
 %type <http_headers> mime_headers 
 %type <message> http_message
-%type <str> URI
 %type <request_line> request_line 
 %type <status_line> status_line 
 %type <http_body> message_body 
@@ -79,17 +80,14 @@ mime_headers
   ;
 
 request_line
-  : HTTP_METHOD SPACE request_URI SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);free($1);free($3);free($5);}
+  : HTTP_METHOD SPACE QS SPACE HTTP_VERSION CRLF {$$ = __httpRequestLine($1, $3, $5);free($1);free($5);}
   ;
 
-request_URI
-  : '*'    {__http_process_options();}
-  | '/'    {__http_process_default_uri();}
-  | URI    {printf("Got URI");}
-  ;
-
-URI
-  : RESOURCE '?' QS { __http_process_qs($1, $3);}
+QS
+  : RESOURCE             {$$ = __http_process_qs($1, NULL);}
+  | RESOURCE '?' QS      {$$ = __http_process_qs($1, $3);}
+  | PARAM EQ VALUE       {$$ = __httpInsertQsParam(NULL, $1, $3);}
+  | QS PARAM EQ VALUE    {$$ = __httpInsertQsParam($1, $2, $4);}
   ;
 
 status_line

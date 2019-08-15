@@ -61,6 +61,7 @@ struct http_headers
   struct http_headers *next;
 };
 
+
 struct qs_param
 {
   char *name;
@@ -70,12 +71,19 @@ struct qs_param
 
 typedef struct qs_param qs_param_t;
 
+struct qs_param_tt
+{
+  char *resource_name;
+  qs_param_t *qsParam;
+};
+
+typedef struct qs_param_tt qs_param_ttt;
+
 struct http_qs
 {
   http_method_t method;
   http_version_t version;
-  char resource_name[__HTTP_MAX_URI_SIZE];
-  qs_param_t *qs_param;
+  qs_param_ttt *qs_param;
   
 };
 
@@ -101,19 +109,17 @@ struct http_req
 
 typedef struct http_req http_message_t;
 
-int __http_process_request(unsigned char *HTTP_method, unsigned char *HTTP_version);
-
-int __http_process_qs(unsigned char *pResource, unsigned char *pQs);
+qs_param_ttt *__http_process_qs(char *pResource, qs_param_t *pQs);
 
 int __http_process_default_uri(void);
 int __http_process_options(void);
 
-http_message_t *__http_parser_ex(char *pIn);
+void *__http_parser_ex(char *pIn);
 
 http_message_t *http_init(void);
 
 http_qs_t *__httpRequestLine(char *pHttpMethod, 
-                             char *pUri, 
+                             qs_param_ttt *pUri, 
                              char *pHttpVersion);
 
 http_header_t *__httpNewMimeHeader(char *pMimeFieldName, 
@@ -142,14 +148,18 @@ http_headers_t *__httpInsertMimeHeader(http_headers_t *headers,
 
 http_body_t *__httpInsertBody(http_body_t *head, char *body);
 
-char *shahadaGetFieldValue(char *field_name, http_message_t *msg);
-char *shahadaGetUri(http_message_t *pMsg);
-char *shahadaGetQsParamValue(char *qsParamName, http_message_t *pMsg);
-char *shahadaGetReasonPhrase(http_message_t *pMsg);
+qs_param_ttt *__httpInsertQsParam(qs_param_ttt *qsParam, 
+                                  char *param, 
+                                  char *value);
 
-int shahadaGetStatusCode(http_message_t *pMsg);
-int shahadaGetMethod(http_message_t *pMsg);
-int shahadaGetProtocol(http_message_t *pMsg);
+char *shahadaGetFieldValue(char *field_name, void *msg);
+char *shahadaGetUri(void *pMsg);
+char *shahadaGetQsParamValue(char *qsParamName, void *pMsg);
+char *shahadaGetReasonPhrase(void *pMsg);
+
+int shahadaGetStatusCode(void *pMsg);
+int shahadaGetMethod(void *pMsg);
+int shahadaGetProtocol(void *pMsg);
 
 
 
