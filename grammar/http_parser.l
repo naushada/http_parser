@@ -19,6 +19,10 @@ int yywrap(yyscan_t yyscanner)
 %option warn
 %option header-file="parser/http_parser.yy.h"
 %option outfile="parser/http_parser.yy.c"
+ /*! This is to remove the warning message*/
+%option nounput
+%option noinput
+
 
  /*Exclusive State for String Matching*/
 %x MIME_PARAM_SCAN MIME_PARAM_VALUE_SCAN 
@@ -43,8 +47,12 @@ DELIMITER            [:][ ]
  /*Any character except \r*/
 NOT_CR               [^\r]
 BODY_START           (\r\n\r\n\r\n|\r\n\r\n)
-URI                  ((\*)|(\/[ALPHANUM]*))
+DEFAULT_URI          ((\*)|(\/))    
+URI                  ((\*)|(\/([ALPHANUM])*))
+ /*URI                  [^\?]\?*/
+URI_DELIMETER        [?][ ]
 QS_PARAM             [^=]
+QS_PARAM_DELIMITER   [=]
 QS_VALUE             ([^&]|[^ ])
 
 
@@ -67,6 +75,10 @@ QS_VALUE             ([^&]|[^ ])
   return(RESOURCE);		
 }
 
+<HTTP_REQ>'?' {
+  return('?');
+}
+
 <HTTP_REQ>{PROTOCOL} {
   yylval->str = strdup(yytext);
   return HTTP_VERSION;
@@ -82,7 +94,7 @@ QS_VALUE             ([^&]|[^ ])
 <INITIAL>{PROTOCOL} {
   yylval->str = strdup(yytext);
   BEGIN(HTTP_RSP);
-  fprintf(stderr, "\nMoving to HTTP_RSP value %s len %d\n", yytext,yyleng);
+  fprintf(stderr, "\nMoving to HTTP_RSP value %s len %d\n", yytext,(int)yyleng);
   return(HTTP_VERSION);
 }
 
